@@ -81,19 +81,19 @@ else:
     cats['mt'] = [
             (1, 'mt_mva_tau'),
             (2, 'mt_mva_fake'),
-            (3, 'mt_mva_higgs_murho'),
-            (4, 'mt_mva_higgs_mupi'),
-            (5, 'mt_mva_higgs_mua1'),
-            (6, 'mt_mva_higgs_mua11pr'),
+            (3, 'mt_higgs_murho'),
+            (4, 'mt_higgs_mupi'),
+            (5, 'mt_higgs_mua1'),
+            (6, 'mt_higgs_mua11pr'),
             ]
 
     cats['et'] = [
             (1, 'et_mva_tau'),
             (2, 'et_mva_fake'),
-            (3, 'et_mva_higgs_erho'),
-            (4, 'et_mva_higgs_epi'),
-            (5, 'et_mva_higgs_ea1'),
-            (6, 'et_mva_higgs_ea11pr'),
+            (3, 'et_higgs_erho'),
+            (4, 'et_higgs_epi'),
+            (5, 'et_higgs_ea1'),
+            (6, 'et_higgs_ea11pr'),
             ]
 
 # Create an empty CombineHarvester instance
@@ -111,22 +111,23 @@ for chn in chans:
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
 # TODO: systematics to be added here
-cb = AddSMRun3Systematics(cb) 
+# if chn == "tt":
+# cb = AddSMRun3Systematics(cb)
 
 if merge_mode == 2:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
-                 'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr',
-                 'et_mva_higgs_erho', 'et_mva_higgs_ea11pr'
+                 'mt_higgs_murho', 'mt_higgs_mua11pr',
+                 'et_higgs_erho', 'et_higgs_ea11pr'
     ]
     sym_cats = ['tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
-                'et_mva_higgs_epi', 'et_mva_higgs_ea1'
+                'mt_higgs_mupi', 'mt_higgs_mua1',
+                'et_higgs_epi', 'et_higgs_ea1'
     ]
 elif merge_mode == 1: 
     flat_cats = []
     sym_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1', 'tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr', 'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
-                'et_mva_higgs_erho', 'et_mva_higgs_ea11pr', 'et_mva_higgs_epi', 'et_mva_higgs_ea1'
+                'mt_higgs_murho', 'mt_higgs_mua11pr', 'mt_higgs_mupi', 'mt_higgs_mua1',
+                'et_higgs_erho', 'et_higgs_ea11pr', 'et_higgs_epi', 'et_higgs_ea1'
     ]
 else:
     flat_cats = []
@@ -136,9 +137,9 @@ else:
 
 for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
-    elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
+    # elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
-    else: filename = '%s/%s_Run3_merged-mergeXbins.root' % (input_folder, chn)
+    else: filename = '%s/added_histo_%s-mergeXbins.root' % (input_folder, chn)
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 

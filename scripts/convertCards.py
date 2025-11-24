@@ -4,6 +4,7 @@ import argparse
 ROOT.TH1.AddDirectory(False)
 from ctypes import c_double
 import os
+import numpy as np
 ROOT.gROOT.SetBatch(True)
  
 # note that the merging of bins requires an even numnber of phi_CP bins, and this number must be set to the specific value used in the dictionary below otherwise the method will give incorrect results!
@@ -163,9 +164,8 @@ def ASymmetrise(hist,hsm,hps,nxbins):
 
       c1_new = ( smj+psj-mmj + mmi)/2
       c2_new = ( smi+psi-mmi + mmj)/2
-
       e1_new = math.sqrt((e_smj+e_psj-e_mmj)**2 + e_mmi**2)/2 
-      e2_new = math.sqrt((e_smi+e_psi-e_mmi)**2 + e_mmj**2)/2 
+      e2_new = math.sqrt((e_smi+e_psi-e_mmi)**2 + e_mmj**2)/2       
 
       histnew.SetBinContent(lo_bin_,c1_new)
       histnew.SetBinContent(hi_bin_,c2_new)
@@ -258,7 +258,7 @@ def GetFFUncerts(dirname, infile):
     
         extra_hists[dirname] += [uncert_up, uncert_down]
 
-def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
+def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname, incData=False):
     directory = infile.Get(dirname)
 
     histos = []
@@ -284,7 +284,7 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname):
         histo.Write()    
         if nxbins== 1: continue    
         # if data we skip
-        if 'data_obs' in histo.GetName(): continue    
+        if 'data_obs' in histo.GetName() and not incData: continue    
         # if mm signal then we only anti-symmetrise
         elif 'H_mm' in histo.GetName() and 'htt125' in histo.GetName() and nxbins>1:
             hsm = directory.Get(histo.GetName().replace('H_mm_','H_sm_'))
@@ -325,8 +325,9 @@ output_file = ROOT.TFile(newfilename,"RECREATE")
 for key in original_file.GetListOfKeys():
     if isinstance(original_file.Get(key.GetName()),ROOT.TDirectory):
         dirname=key.GetName()
-        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs"): GetFFUncerts(dirname, original_file)
-        getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname)
+        incData = dirname.startswith("tt_tau_") or dirname.startswith("tt_fake_")
+        if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs") and not dirname.startswith("tt_tau_") and not dirname.startswith("tt_fake_"): GetFFUncerts(dirname, original_file)
+        getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname, incData)
 
 if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
 
@@ -358,8 +359,129 @@ if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_m
                 uncert = abs(uncert - 1)+1
                 f.write(f'  {dirname}: {uncert:.3f}\n')
 
+def MakePlot(hists=[], filename='plot.pdf'):
+
+    c = ROOT.TCanvas()
+    hists[0].SetMinimum(0)
+    hists[0].SetStats(0)
+    hists[0].SetTitle('')
+    hists[0].GetXaxis().SetTitle('#phi_{CP} (#circ)')
+    hists[0].Draw()
+    hists[1].SetLineColor(ROOT.kRed)
+    hists[1].Draw('same')
+    hists[2].SetLineColor(ROOT.kGreen-2)
+    hists[2].Draw('same')
+
+    sym_clone = hists[1].Clone()
+    # zero errors for sym_clone
+    for i in range(1,sym_clone.GetNbinsX()+1):
+        sym_clone.SetBinError(i,0)
+    flat_clone = hists[2].Clone()
+    for i in range(1,flat_clone.GetNbinsX()+1):
+        flat_clone.SetBinError(i,0)
+    sym_KS_test = hists[0].KolmogorovTest(sym_clone,"WW")
+    flat_KS_test = hists[0].KolmogorovTest(flat_clone,"WW")
+    sym_chi_pvalue = test_results_sym[dirname][hists[0].GetName()][0]
+    flat_chi_pvalue = test_results_flat[dirname][hists[0].GetName()][0]
+
+    legend = ROOT.TLegend(0.1,0.1,0.9,0.4)
+    legend.SetBorderSize(0)
+    legend.SetFillStyle(0)
+    legend.AddEntry(hists[0],'Original','l')
+    legend.AddEntry(hists[1],f'Symmetrised, chi2 p-val = {sym_chi_pvalue:.2f}, KS p-val = {sym_KS_test:.2f}','l')
+    legend.AddEntry(hists[2],f'Flattened, chi2 p-val = {flat_chi_pvalue:.2f}, KS p-val = {flat_KS_test:.2f}','l')
+    legend.Draw()
+
+    c.Print(filename)
+    
+def MakePlot(hists=[], filename='plot.pdf'):
+
+    # Create canvas and pads
+    c = ROOT.TCanvas("c","c",800,800)
+    pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1.0)  # top pad
+    pad2 = ROOT.TPad("pad2","pad2",0,0.0,1,0.3)  # bottom pad
+    pad1.SetBottomMargin(0)  # no x-labels on top plot
+    pad2.SetTopMargin(0)
+    pad2.SetBottomMargin(0.3)
+    pad1.Draw()
+    pad2.Draw()
+
+    ## ---- TOP PAD ----
+    pad1.cd()
+    hists[0].SetMinimum(0)
+    hists[0].SetStats(0)
+    hists[0].SetTitle('')
+    hists[0].GetXaxis().SetTitle('')
+    hists[0].Draw("e")
+    hists[1].SetLineColor(ROOT.kRed)
+    hists[1].Draw("e SAME")
+    hists[2].SetLineColor(ROOT.kGreen-2)
+    hists[2].Draw("e SAME")
+
+    # KS tests and chi2 p-values
+    sym_clone = hists[1].Clone()
+    for i in range(1,sym_clone.GetNbinsX()+1):
+        sym_clone.SetBinError(i,0)
+    flat_clone = hists[2].Clone()
+    for i in range(1,flat_clone.GetNbinsX()+1):
+        flat_clone.SetBinError(i,0)
+    sym_KS_test = hists[0].KolmogorovTest(sym_clone,"WW")
+    flat_KS_test = hists[0].KolmogorovTest(flat_clone,"WW")
+    sym_chi_pvalue = test_results_sym[dirname][hists[0].GetName()][0]
+    flat_chi_pvalue = test_results_flat[dirname][hists[0].GetName()][0]
+
+    legend = ROOT.TLegend(0.1,0.1,0.9,0.4)
+    legend.SetBorderSize(0)
+    legend.SetFillStyle(0)
+    legend.AddEntry(hists[0],'Original','el')
+    legend.AddEntry(hists[1],f'Symmetrised, chi2 p-val = {sym_chi_pvalue:.2f}, KS p-val = {sym_KS_test:.2f}','el')
+    legend.AddEntry(hists[2],f'Flattened, chi2 p-val = {flat_chi_pvalue:.2f}, KS p-val = {flat_KS_test:.2f}','el')
+    legend.Draw()
+
+    ## ---- BOTTOM PAD ----
+    pad2.cd()
+
+    ratio1 = hists[1].Clone()
+    ratio1.Divide(hists[0])
+    ratio1.SetLineColor(ROOT.kRed)
+    ratio1.SetStats(0)
+    ratio1.SetTitle("")
+    ratio1.GetYaxis().SetTitle("Ratio")
+    ratio1.GetYaxis().SetNdivisions(505)
+    ratio1.GetYaxis().SetTitleSize(0.1)
+    ratio1.GetYaxis().SetTitleOffset(0.5)
+    ratio1.GetYaxis().SetLabelSize(0.08)
+
+    ratio1.GetXaxis().SetTitle("#phi_{CP} (#circ)")
+    ratio1.GetXaxis().SetTitleSize(0.1)
+    ratio1.GetXaxis().SetLabelSize(0.08)
+
+    ratio1.SetMinimum(0.85)
+    ratio1.SetMaximum(1.15)
+    ratio1.Draw("E")
+
+    ratio2 = hists[2].Clone()
+    ratio2.Divide(hists[0])
+    ratio2.SetLineColor(ROOT.kGreen-2)
+    ratio2.Draw("E SAME")
+
+    #draw a dashed line at y=1
+    line = ROOT.TLine(ratio1.GetXaxis().GetXmin(),1,ratio1.GetXaxis().GetXmax(),1)
+    line.SetLineStyle(2)
+    line.Draw("SAME")
+
+    # Save
+    c.Print(filename)
 
 if args.test:
+
+    for_bkg_cats = False # can change to true to make plots for the background only categories
+    if for_bkg_cats:
+      n_flat = 3
+      n_sym = 3
+    else:
+      n_flat = 6
+      n_sym = 6
 
     if not os.path.exists('test_results'):
         os.makedirs('test_results')
@@ -375,52 +497,69 @@ if args.test:
     hist_sym_1d = ROOT.TH1D('hist_sym_1d','Symmetrisation tests: all BDT bins',20,0,1)
     hist_flat_1d = ROOT.TH1D('hist_flat_1d','Flattening tests: all BDT bins',20,0,1)
     hist_sym_last_1d = ROOT.TH1D('hist_sym_last_1d','Symmetrisation tests: last BDT bin',20,0,1)
-    hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: lst BDT bin',20,0,1)
+    hist_flat_last_1d = ROOT.TH1D('hist_flat_last_1d','Flattening tests: last BDT bin',20,0,1)
+ 
 
     N_categories = len(test_results_sym)
-    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,10,0,10)
-    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,5,0,5)
-    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,10,0,10)
-    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: lst BDT bin',N_categories,0,N_categories,5,0,5)
+    hist_sym_2d = ROOT.TH2D('hist_sym_2d','Symmetrisation tests: all BDT bins',N_categories,0,N_categories,n_sym,0,n_sym)
+    hist_flat_2d = ROOT.TH2D('hist_flat_2d','Flattening tests: all BDT bins',N_categories,0,N_categories,n_flat,0,n_flat)
+    hist_sym_last_2d = ROOT.TH2D('hist_sym_last_2d','Symmetrisation tests: last BDT bin',N_categories,0,N_categories,n_sym,0,n_sym)
+    hist_flat_last_2d = ROOT.TH2D('hist_flat_last_2d','Flattening tests: last BDT bin',N_categories,0,N_categories,n_flat,0,n_flat)
 
     hist_sym_2d.GetZaxis().SetTitle('P-value')
     hist_flat_2d.GetZaxis().SetTitle('P-value')
     hist_sym_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
     hist_flat_last_2d.GetZaxis().SetTitle('P-value (last BDT bin)')
 
-    hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
-    hist_sym_2d.GetYaxis().SetBinLabel(10,'Higgs_flat_htt125')
+    if for_bkg_cats:
+        hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+    
+        hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_sm_prod_ps_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_sm_prod_mm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(7,'ggH_ps_prod_sm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(8,'ggH_ps_prod_ps_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(9,'ggH_ps_prod_mm_htt125')
-    hist_sym_last_2d.GetYaxis().SetBinLabel(10,'Higgs_flat_htt125')
+    
+        hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(3,'data_obs')
 
-    hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
-    hist_flat_last_2d.GetYaxis().SetBinLabel(5,'Higgs_flat_htt125')
+    
+        hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(3,'data_obs')
+
+    else:
+
+        hist_sym_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+        hist_sym_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+        hist_flat_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_sym_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(3,'qqH_sm_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(4,'ggH_sm_prod_sm_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(5,'ggH_ps_prod_ps_htt125')
+        hist_sym_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
+    
+        hist_flat_last_2d.GetYaxis().SetBinLabel(1,'ZTT')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(2,'JetFakes')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(3,'qqH_flat_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(4,'ggH_flat_prod_sm_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(5,'ggH_flat_prod_ps_htt125')
+        hist_flat_last_2d.GetYaxis().SetBinLabel(6,'ggH_flat_prod_mm_htt125')
 
     hist_sym_2d.SetStats(0)
     hist_flat_2d.SetStats(0)
@@ -445,32 +584,46 @@ if args.test:
     #print('\n\nSymmetrisation test results:')
     i = 0
     for dirname, results in test_results_sym.items():
+
+        if for_bkg_cats: 
+            data = output_file.Get(dirname+'/data_obs')
+            ztt = output_file.Get(dirname+'/ZTT')
+            fakes = output_file.Get(dirname+'/JetFakes')
+            data_sym = output_file.Get(dirname+'/data_obs_sym')
+            ztt_sym = output_file.Get(dirname+'/ZTT_sym')
+            fakes_sym = output_file.Get(dirname+'/JetFakes_sym')
+            data_flat = output_file.Get(dirname+'/data_obs_flat')
+            ztt_flat = output_file.Get(dirname+'/ZTT_flat')
+            fakes_flat = output_file.Get(dirname+'/JetFakes_flat')
+            MakePlot([data,data_sym,data_flat], 'test_results/'+dirname+'_data.pdf')
+            MakePlot([ztt,ztt_sym,ztt_flat], 'test_results/'+dirname+'_ZTT.pdf')
+            MakePlot([fakes,fakes_sym,fakes_flat], 'test_results/'+dirname+'_fakes.pdf')
+
         i+=1
         #print(f'Directory: {dirname}')
         # set x-labels
         hist_sym_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_sym_last_2d.GetXaxis().SetBinLabel(i, dirname)
         for hist_name, (p_val_total, p_val_last) in results.items():
-            if not(hist_name in ['JetFakes', 'ZTT','Higgs_flat_htt125'] or hist_name.startswith('ggH') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
+            #if not(hist_name in ['JetFakes', 'ZTT','Higgs_flat_htt125'] or hist_name.startswith('ggH') or hist_name.startswith('qqH_sm')) or 'unfiltered' in hist_name: continue
             #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
             j = None
             if hist_name == 'ZTT': j = 1
             if hist_name == 'JetFakes': j = 2
-            if hist_name == 'qqH_sm_htt125': j = 3
-            if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
-            if hist_name == 'ggH_sm_prod_ps_htt125': j = 5
-            if hist_name == 'ggH_sm_prod_mm_htt125': j = 6
-            if hist_name == 'ggH_ps_prod_sm_htt125': j = 7
-            if hist_name == 'ggH_ps_prod_ps_htt125': j = 8
-            if hist_name == 'ggH_ps_prod_mm_htt125': j = 9
-            if hist_name == 'Higgs_flat_htt125': j = 10
+            if not for_bkg_cats:
+              if hist_name == 'qqH_sm_htt125': j = 3
+              if hist_name == 'ggH_sm_prod_sm_htt125': j = 4
+              if hist_name == 'ggH_ps_prod_ps_htt125': j = 5
+              if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            else:
+              if hist_name == 'data_obs': j = 3
 
             if j is None: continue
 
             hist_sym_2d.SetBinContent(i,j,p_val_total)
             hist_sym_last_2d.SetBinContent(i,j,p_val_last)
 
-            if j < 7: # only use statistically independent processes for 1D plot
+            if j: # only use statistically independent processes for 1D plot
               gr_sym_id.SetPoint(gr_sym_id.GetN(), p_val_total, 1)
               gr_sym_last_id.SetPoint(gr_sym_last_id.GetN(), p_val_last,1)
               hist_sym_1d.Fill(p_val_total)
@@ -485,20 +638,28 @@ if args.test:
         hist_flat_2d.GetXaxis().SetBinLabel(i, dirname)
         hist_flat_last_2d.GetXaxis().SetBinLabel(i, dirname)
         for hist_name, (p_val_total, p_val_last) in results.items():
-            if hist_name not in ['JetFakes', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125', 'Higgs_flat_htt125']: continue
+            #if hist_name not in ['JetFakes', 'ZTT', 'qqH_flat_htt125', 'ggH_flat_prod_sm_htt125', 'ggH_flat_prod_ps_htt125', 'ggH_flat_prod_mm_htt125']: continue
             #print(f'  Histogram: {hist_name}, P-value total: {p_val_total:.4f}, P-value last bin: {p_val_last:.4f}')
 
             j = None
             if hist_name == 'ZTT': j = 1
             if hist_name == 'JetFakes': j = 2
-            if hist_name == 'qqH_flat_htt125': j = 3
-            if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
-            if hist_name == 'Higgs_flat_htt125': j = 5
+            if not for_bkg_cats:
+              if hist_name == 'qqH_flat_htt125': j = 3
+              if hist_name == 'ggH_flat_prod_sm_htt125': j = 4
+              if hist_name == 'ggH_flat_prod_ps_htt125': j = 5
+              if hist_name == 'ggH_flat_prod_mm_htt125': j = 6
+            else:
+              if hist_name == 'data_obs': j = 3
 
+            if j is None: continue
+
+            print(hist_flat_2d)
+            print(i,j,p_val_total)
             hist_flat_2d.SetBinContent(i,j,p_val_total)
             hist_flat_last_2d.SetBinContent(i,j,p_val_last)
 
-            if j and j not in [3,4]: # only use statistically independent processes for 1D plot
+            if j: # only use statistically independent processes for 1D plot
               hist_flat_1d.Fill(p_val_total)
               hist_flat_last_1d.Fill(p_val_last)
               gr_flat_id.SetPoint(gr_flat_id.GetN(), p_val_total, 1)

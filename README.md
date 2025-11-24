@@ -122,6 +122,57 @@ And then plot using:
 plotImpacts.py -i impacts.json -o impacts
 ```
 
+### Running full impacts
+
+Run initial fit:
+
+```
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90  --redefineSignalPOIs alpha  -d outputs/cmb/ws.root -t -1 -n .alpha.Impacts --doInitialFit --robustFit=1 --cminDefaultMinimizerStrategy=0
+```
+
+Then run fits for each parameter as batch jobs, in the example below running 10 parameters per job:
+
+```
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90  --redefineSignalPOIs alpha  -d outputs/cmb/ws.root -t -1 -n .alpha.Impacts --doFits --robustFit=1 --cminDefaultMinimizerStrategy=0 --job-mode condor --task-name condor-impacts --sub-opts='+MaxRuntime=10800' --merge 10
+```
+
+Collect the outputs and make a json file:
+
+```
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90  --redefineSignalPOIs alpha  -d outputs/cmb/ws.root -t -1 -n .alpha.Impacts --exclude lumi_13p6TeV -o impacts.json
+```
+
+Note you may find that some of the fits did not produce a propper output and they get skipped, e.g in my case the lumi parameter. 
+You may want to investigate what actually went wrong in the fit and re-run it for this specific parameter.
+
+You can run the fits for a specific parameter using e.g:
+
+```
+combine -M MultiDimFit -n _paramFit_.alpha.Impacts_lumi_13p6TeV --algo impact --redefineSignalPOIs alpha -P lumi_13p6TeV --floatOtherPOIs 1 --saveInactivePOI 1 --setParameterRanges alpha=-90,90 -t -1 --robustFit=1 -m 125 -d outputs/cmb/ws.root --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --cminDefaultMinimizerStrategy=0
+```
+Then debug and fix as needed
+
+Finally, make the plot using:
+
+```
+plotImpacts.py -i impacts.json -o impacts
+```
+
+It can also be informative to look at impacts for the signal strength, in this example we do t
+his for a common signal strength (scale both ggH and VBF with same rate param):
+
+```
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90:mutautau=0,10  --redefineSignalPOIs mutautau --freezeParameters=muggH,muV  -d outputs/cmb/ws.root -t -1 -n .mutautau.Impacts --doInitialFit --robustFit=1 --cminDefaultMinimizerStrategy=0
+
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90:mutautau=0,10  --redefineSignalPOIs mutautau --freezeParameters=muggH,muV  -d outputs/cmb/ws.root -t -1 -n .mutautau.Impacts --doFits --robustFit=1 --cminDefaultMinimizerStrategy=0 --exclude muV,muggH --job-mode condor --task-name condor-impacts --sub-opts='+MaxRuntime=10800' --merge 10
+```
+Wait for jobs to finish then collect and plot:
+```
+combineTool.py -M Impacts -m 125 --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90:mutautau=0,10  --redefineSignalPOIs mutautau --freezeParameters=muggH,muV  -d outputs/cmb/ws.root -t -1 -n .mutautau.Impacts --exclude muV,muggH -o impacts_mu.json
+
+plotImpacts.py -i impacts_mu.json -o impacts_mu
+```
+
 ### Running combination with Run-2
 
 checkout the Run-2 datacards

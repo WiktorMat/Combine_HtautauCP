@@ -23,16 +23,16 @@ cp_bins = {
         "tt_higgs_rhorho" : 10,
         "mt_mva_tau": 1,
         "mt_mva_fake": 1,
-        "mt_mva_higgs_mua1": 10,
-        "mt_mva_higgs_mua11pr": 8,
-        "mt_mva_higgs_mupi": 8,
-        "mt_mva_higgs_murho": 10,
+        "mt_higgs_mua1": 10,
+        "mt_higgs_mua11pr": 8,
+        "mt_higgs_mupi": 8,
+        "mt_higgs_murho": 10,
         "et_mva_tau": 1,
         "et_mva_fake": 1,
-        "et_mva_higgs_ea1": 10,
-        "et_mva_higgs_ea11pr": 8,
-        "et_mva_higgs_epi": 8,
-        "et_mva_higgs_erho": 10
+        "et_higgs_ea1": 10,
+        "et_higgs_ea11pr": 8,
+        "et_higgs_epi": 8,
+        "et_higgs_erho": 10
 }
 
 test_results_sym = {}

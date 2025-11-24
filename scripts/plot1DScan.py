@@ -9,6 +9,7 @@ import argparse
 import os.path
 import numpy as np
 import gc
+import os
 gc.disable()
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -179,7 +180,7 @@ parser.add_argument('--y-max', type=float, default=8., help='max y to draw')
 parser.add_argument('--y-min', type=float, default=0., help='max y to draw')
 parser.add_argument('--x-max', type=float, default=None, help='max x to draw')
 parser.add_argument('--x-min', type=float, default=None, help='min x to draw')
-parser.add_argument('--remove-near-min', type=float, help='remove points with this fraction of the average x-spacing to the best-fit point')
+parser.add_argument('--remove-near-min', type=float, help='remove points with this fraction of the average x-spacing to the best-fit point', default=0.01)
 parser.add_argument('--rezero', action='store_true', help='correct y-values if a point with a lower minimum than zero is found')
 parser.add_argument('--output', '-o', help='output name')
 parser.add_argument('--main', '-m', help='Main input file for the scan')
@@ -187,7 +188,7 @@ parser.add_argument('--json', help='update this json file')
 parser.add_argument('--model', help='use this model identifier')
 parser.add_argument('--POI', help='use this parameter of interest')
 parser.add_argument('--translate', default=None, help='json file with POI name translation')
-parser.add_argument('--main-label', default='Observed', type=str, help='legend label for the main scan')
+parser.add_argument('--main-label', default='Expected', type=str, help='legend label for the main scan')
 parser.add_argument('--main-color', default=1, type=int, help='line and marker color for main scan')
 parser.add_argument('--relax-safety', default=0, type=int, help='line and marker color for main scan')
 parser.add_argument('--others', nargs='*', help='add secondary scans processed as main: FILE:LABEL:COLOR')
@@ -217,6 +218,7 @@ if args.upper_cl is not None:
     yvals = [ROOT.Math.chisquared_quantile(args.upper_cl, 1)]
 
 main_scan = BuildScan(args.output, args.POI, [args.main], args.main_color, yvals, args.chop, args.remove_near_min, args.rezero, remove_delta = args.remove_delta, improve = args.improve)
+
 
 other_scans = [ ]
 other_scans_opts = [ ]
@@ -248,7 +250,7 @@ main_scan['graph'].SetMarkerColor(1)
 main_scan['graph'].SetLineColor(ROOT.TColor.GetColor("#000099"))
 main_scan['graph'].SetLineStyle(1)
 main_scan['graph'].SetLineWidth(3)
-main_scan['graph'].Draw('APL') #'APL'
+main_scan['graph'].Draw('APC') #'APL' ###TODO: change back to L
 
 
 axishist = plot.GetAxisHist(pads[0])
@@ -308,7 +310,8 @@ if args.POI == 'alpha':
   latex.SetNDC()
   latex.SetTextSize(0.04)
   latex.SetTextAlign(12)
-  latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
+#   latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
+  latex.DrawLatex(.7,.9,"Obs vs 0^{-} = %.2f#sigma" % ps_significance)
   print("0^{+} vs 0^{-} = %.3f#sigma" % significance)
   print('max sigma = ', max_significance)
   print('best vs CP-odd sigma = ', ps_significance)
@@ -471,7 +474,7 @@ if args.json is not None:
 
 plot.DrawCMSLogo(pads[0], args.logo, args.logo_sub, 10, 0.035, 0.035, 1.2, cmsTextSize=1.0)
 
-if not args.no_title: plot.DrawTitle(pads[0], '61.9 fb^{-1} (13.6 TeV)', 3) # early Run 3
+if not args.no_title: plot.DrawTitle(pads[0], '62.4 fb^{-1} (13.6 TeV)', 3) # early Run 3
 # if not args.no_title: plot.DrawTitle(pads[0], '58 fb^{-1} (13 TeV)', 3) # 16+17+18
 pads[0].SetTicks(1)
 
@@ -486,6 +489,7 @@ if len(other_scans) >= 3:
     else:
         legend = ROOT.TLegend(0.46, 0.7, 0.95, 0.93, '', 'NBNDC')
         legend.SetNColumns(2)
+
 
 if args.POI == 'alpha': legend.AddEntry(main_scan['func'], args.main_label + ': #alpha^{H#tau#tau} = %.0f#circ{}^{#plus %.0f#circ}_{#minus %.0f#circ}' % (val_nom[0], val_nom[1], abs(val_nom[2])), 'L')
 #if args.POI == 'alpha': legend.AddEntry(main_scan['func'], args.main_label + ': #alpha = %.5f#circ{}^{#plus %.5f#circ}_{#minus %.5f#circ}' % (val_nom[0], val_nom[1], abs(val_nom[2])), 'L')

@@ -22,18 +22,18 @@ cp_bins = {
         "tt_higgs_pipi" : 4,
         "tt_higgs_rhoa11pr" : 10,
         "tt_higgs_rhorho" : 10,
-        "mt_mva_tau": 1,
-        "mt_mva_fake": 1,
-        "mt_higgs_mua1": 10,
-        "mt_higgs_mua11pr": 8,
-        "mt_higgs_mupi": 8,
-        "mt_higgs_murho": 10,
-        "et_mva_tau": 1,
-        "et_mva_fake": 1,
-        "et_higgs_ea1": 10,
-        "et_higgs_ea11pr": 8,
-        "et_higgs_epi": 8,
-        "et_higgs_erho": 10
+        "mt_mva_tau_mTLt65": 1,
+        "mt_mva_fake_mTLt65": 1,
+        "mt_higgs_mua1_mTLt65": 10,
+        "mt_higgs_mua11pr_mTLt65": 8,
+        "mt_higgs_mupi_mTLt65": 8,
+        "mt_higgs_murho_mTLt65": 10,
+        "et_mva_tau_mTLt65": 1,
+        "et_mva_fake_mTLt65": 1,
+        "et_higgs_ea1_mTLt65": 10,
+        "et_higgs_ea11pr_mTLt65": 8,
+        "et_higgs_epi_mTLt65": 8,
+        "et_higgs_erho_mTLt65": 10
 }
 
 test_results_sym = {}
@@ -253,8 +253,8 @@ def GetFFUncerts(dirname, infile):
         uncert_down.Divide(data_merged)
         uncert_down.Scale(rate/uncert_down.Integral())
 
-        uncert_up.SetName(f'JetFakes_ff_tt_syst_{x}shape{name_extra}Up')
-        uncert_down.SetName(f'JetFakes_ff_tt_syst_{x}shape{name_extra}Down')
+        uncert_up.SetName(f'JetFakes_CMS_HIG_25012_fake_t_syst_{x}shape{name_extra}Up')
+        uncert_down.SetName(f'JetFakes_CMS_HIG_25012_fake_t_syst_{x}shape{name_extra}Down')
     
         extra_hists[dirname] += [uncert_up, uncert_down]
 

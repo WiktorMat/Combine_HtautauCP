@@ -79,21 +79,21 @@ else:
             ]
 
     cats['mt'] = [
-            (1, 'mt_mva_tau'),
-            (2, 'mt_mva_fake'),
-            (3, 'mt_higgs_murho'),
-            (4, 'mt_higgs_mupi'),
-            (5, 'mt_higgs_mua1'),
-            (6, 'mt_higgs_mua11pr'),
+            (1, 'mt_mva_tau_mTLt65'),
+            (2, 'mt_mva_fake_mTLt65'),
+            (3, 'mt_higgs_murho_mTLt65'),
+            (4, 'mt_higgs_mupi_mTLt65'),
+            (5, 'mt_higgs_mua1_mTLt65'),
+            (6, 'mt_higgs_mua11pr_mTLt65'),
             ]
 
     cats['et'] = [
-            (1, 'et_mva_tau'),
-            (2, 'et_mva_fake'),
-            (3, 'et_higgs_erho'),
-            (4, 'et_higgs_epi'),
-            (5, 'et_higgs_ea1'),
-            (6, 'et_higgs_ea11pr'),
+            (1, 'et_mva_tau_mTLt65'),
+            (2, 'et_mva_fake_mTLt65'),
+            (3, 'et_higgs_erho_mTLt65'),
+            (4, 'et_higgs_epi_mTLt65'),
+            (5, 'et_higgs_ea1_mTLt65'),
+            (6, 'et_higgs_ea11pr_mTLt65'),
             ]
 
 # Create an empty CombineHarvester instance
@@ -111,8 +111,8 @@ for chn in chans:
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
 # TODO: systematics to be added here
-# if chn == "tt":
-# cb = AddSMRun3Systematics(cb)
+if chn == "tt":
+    cb = AddSMRun3Systematics(cb)
 
 if merge_mode == 2 or merge_mode == 3:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',

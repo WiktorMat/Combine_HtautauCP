@@ -14,7 +14,7 @@ with open(args.config, 'r') as file:
    setup = yaml.safe_load(file)
 
 chans = setup['channels']
-if chans == 'all': chans = ['tt','mt','et'] # only using tt channel for now but can add mt and et later
+if chans == 'all': chans = ['tt','mt','et']
 else: chans = chans.split(',')
 
 
@@ -110,9 +110,8 @@ for chn in chans:
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['ggH'], cats[chn], True)
     cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
 
-# TODO: systematics to be added here
-if chn == "tt":
-    cb = AddSMRun3Systematics(cb)
+# Systematics are added here
+cb = AddSMRun3Systematics(cb)
 
 if merge_mode == 2 or merge_mode == 3:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',

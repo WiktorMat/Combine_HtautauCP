@@ -253,8 +253,8 @@ def GetFFUncerts(dirname, infile):
         uncert_down.Divide(data_merged)
         uncert_down.Scale(rate/uncert_down.Integral())
 
-        uncert_up.SetName(f'JetFakes_CMS_HIG_25012_fake_t_syst_{x}shape{name_extra}Up')
-        uncert_down.SetName(f'JetFakes_CMS_HIG_25012_fake_t_syst_{x}shape{name_extra}Down')
+        uncert_up.SetName(f'JetFakes_CMS_HIG25012_fake_t_syst_{x}shape{name_extra}Up')
+        uncert_down.SetName(f'JetFakes_CMS_HIG25012_fake_t_syst_{x}shape{name_extra}Down')
     
         extra_hists[dirname] += [uncert_up, uncert_down]
 

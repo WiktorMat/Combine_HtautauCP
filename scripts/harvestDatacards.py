@@ -115,24 +115,24 @@ cb = AddSMRun3Systematics(cb)
 
 if merge_mode == 2 or merge_mode == 3:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
-                 'mt_higgs_murho', 'mt_higgs_mua11pr',
-                 'et_higgs_erho', 'et_higgs_ea11pr'
+                 'mt_higgs_murho_mTLt65', 'mt_higgs_mua11pr_mTLt65',
+                 'et_higgs_erho_mTLt65', 'et_higgs_ea11pr_mTLt65'
     ]
     sym_cats = ['tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'mt_higgs_mupi', 'mt_higgs_mua1',
-                'et_higgs_epi', 'et_higgs_ea1'
+                'mt_higgs_mupi_mTLt65', 'mt_higgs_mua1_mTLt65',
+                'et_higgs_epi_mTLt65', 'et_higgs_ea1_mTLt65'
     ]
 elif merge_mode == 1: 
     flat_cats = []
     sym_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1', 'tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                'mt_higgs_murho', 'mt_higgs_mua11pr', 'mt_higgs_mupi', 'mt_higgs_mua1',
-                'et_higgs_erho', 'et_higgs_ea11pr', 'et_higgs_epi', 'et_higgs_ea1'
+                'mt_higgs_murho_mTLt65', 'mt_higgs_mua11pr_mTLt65', 'mt_higgs_mupi_mTLt65', 'mt_higgs_mua1_mTLt65',
+                'et_higgs_erho_mTLt65', 'et_higgs_ea11pr_mTLt65', 'et_higgs_epi_mTLt65', 'et_higgs_ea1_mTLt65'
     ]
 elif merge_mode == 4:
     # most extreme case where all categories and background processes are flattened
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1', 'tt_higgs_a1a1', 'tt_higgs_pipi', 'tt_higgs_pia1',
-                 'mt_mva_higgs_murho', 'mt_mva_higgs_mua11pr', 'mt_mva_higgs_mupi', 'mt_mva_higgs_mua1',
-                 'et_mva_higgs_erho', 'et_mva_higgs_ea11pr', 'et_mva_higgs_epi', 'et_mva_higgs_ea1'
+                 'mt_mva_higgs_murho_mTLt65', 'mt_mva_higgs_mua11pr_mTLt65', 'mt_mva_higgs_mupi_mTLt65', 'mt_mva_higgs_mua1_mTLt65',
+                 'et_mva_higgs_erho_mTLt65', 'et_mva_higgs_ea11pr_mTLt65', 'et_mva_higgs_epi_mTLt65', 'et_mva_higgs_ea1_mTLt65'
     ]
     sym_cats = [
     ]
@@ -146,7 +146,7 @@ for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     # elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
-    else: filename = '%s/added_histo_%s-mergeXbins.root' % (input_folder, chn)
+    else: filename = '%s/added_histo_%s-mergeXbins_flatSyst.root' % (input_folder, chn) #_flatSyst
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
@@ -168,6 +168,7 @@ for chn in chans:
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS_sym", "$BIN/$PROCESS_$SYSTEMATIC_sym")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS_sym", "$BIN/$PROCESS$MASS_$SYSTEMATIC_sym")
             else:
+                print("WARNING: Category %s in channel %s not found in flat or sym lists!" % (cat[1], chn))
                 cb.cp().channel([chn]).bin_id([cat[0]]).backgrounds().era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
                 for sig_proc in sig_procs.values(): cb.cp().channel([chn]).bin_id([cat[0]]).process(sig_proc).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC")
 

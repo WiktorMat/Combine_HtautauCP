@@ -272,10 +272,11 @@ def AddSMRun3Systematics(cb):
     # TODO: FF uncertainties - need to be added for et and mt channels as well
 
     # tt channel statistical uncertainties
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,7,8,9,10]).AddSyst(cb, "CMS_HIG25012_fake_t_stat_dm0", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,3,4,5,7]).AddSyst(cb, "CMS_HIG25012_fake_t_stat_dm1", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,4,10,11]).AddSyst(cb, "CMS_HIG25012_fake_t_stat_dm2", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,5,6,9,11]).AddSyst(cb, "CMS_HIG25012_fake_t_stat_dm10", "shape", ch.SystMap()(1.0))
+    for njets in [0,1,2]:
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,7,8,9,10]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm0_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,3,4,5,7]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm1_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,4,10,11]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm2_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,5,6,9,11]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm10_{njets}j", "shape", ch.SystMap()(1.0))
 
     # add lnN FF uncertainty from yml file located in configs/ff_lnN_uncertainties.yml
     # open yml file and read uncertainties
@@ -297,6 +298,21 @@ def AddSMRun3Systematics(cb):
     cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "CMS_HIG25012_fake_t_sub_syst", "shape", ch.SystMap()(1.0))
     # lnN uncertainty for the JetFakesSublead as it is estimated from MC
     cb.cp().process(['JetFakesSublead']).channel(['tt']).AddSyst(cb, "CMS_HIG25012_fake_t_mc", "lnN", ch.SystMap()(1.3))
+
+    # mt and et channel FF uncertainties
+    for ff_type in ['wj','qcd','mc_top']:
+        # statistics
+        for njets in [0,1,2]:
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,4]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm0_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,3]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm1_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,6]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm2_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,5]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm10_{njets}j", "shape", ch.SystMap()(1.0))
+
+        # systematic
+        cb.cp().process(['JetFakes']).channel(['mt','et']).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_syst", "shape", ch.SystMap()(1.0))
+
+    # uncertainty due to subtracted real taus in the mt and et channels
+    cb.cp().process(['JetFakes']).channel(['mt','et']).AddSyst(cb, "CMS_HIG25012_fake_t_sub_syst", "shape", ch.SystMap()(1.0))
 
     ###############################################
     # 4-vectors for CP angle reconstruction

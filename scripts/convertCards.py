@@ -43,6 +43,24 @@ test_results_asym = {}
 ff_aiso_yields = {}
 extra_hists = {}
 
+def FlattenSystematic(nom_hist, syst_hist, nxbins):
+
+  # flatten a systematic histogram
+
+  ratio_hist = syst_hist.Clone()
+  ratio_hist.Divide(nom_hist) # divide systematic by nominal to get ratio
+  for i in range(1, ratio_hist.GetNbinsX() + 1):
+    ratio_hist.SetBinError(i, 0)
+  # flatten the ratio histogram
+  ratio_flat, _, _ = MergeXBins(ratio_hist, nxbins)
+
+  # get new systematic histogram by multiplying flattened ratio by nominal
+  new_syst_hist = nom_hist.Clone()
+  new_syst_hist.Multiply(ratio_flat)
+
+  return new_syst_hist
+
+
 def MergeXBins(hist, nxbins):
   histnew = hist.Clone()
   nbins = hist.GetNbinsX()
@@ -312,6 +330,57 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname, incData=Fal
 
         ROOT.gDirectory.cd('/')
 
+
+def getFlattenedSysts(infile,outfile,dirname,write_dirname, incData=False):
+    directory = infile.Get(dirname)
+    print("Flattening certain systematics")
+    histos = []
+    for key in directory.GetListOfKeys():
+        histo = directory.Get(key.GetName())
+        if isinstance(histo, ROOT.TH1D) or isinstance(histo, ROOT.TH1F):
+            histos.append(histo)
+
+    for histo in histos:
+        is_syst = False # track whether this is a systematic variation
+        if "_CMS" in histo.GetName():
+            if "res_IP" in histo.GetName() or "res_SV" in histo.GetName():
+                is_syst = False # expected to affect phiCP
+            else:
+                if "Up" in histo.GetName():
+                    syst_name = '_CMS' + histo.GetName().split('_CMS')[1].split('Up')[0] + "Up"
+                    is_syst=True
+                elif "Down" in histo.GetName():
+                    syst_name = '_CMS' + histo.GetName().split('_CMS')[1].split('Down')[0] + "Down"
+                    is_syst=True
+
+
+        if dirname in cp_bins: nxbins = cp_bins[dirname]
+        else: nxbins = 1
+        # we write all the old histograms to the output file
+        outfile.cd()
+        if not ROOT.gDirectory.GetDirectory(dirname): ROOT.gDirectory.mkdir(dirname)
+        ROOT.gDirectory.cd(dirname)
+
+        if not is_syst: # write original histo
+          histo.Write()
+        else:
+          if nxbins== 1:
+            histo.Write()
+            continue
+          # Get nominal histogram
+          # print('Processing:', histo.GetName())
+          nom_histo_name = histo.GetName().replace(syst_name,'')
+          # print(f">> Getting nominal histo: {nom_histo_name}")
+          nom_histo = directory.Get(nom_histo_name)
+          if not nom_histo:
+              raise ValueError(f"Could not find nominal histogram for systematic {histo.GetName()}")
+          flattened_syst_histo = FlattenSystematic(nom_histo, histo, nxbins)
+          flattened_syst_histo.SetName(histo.GetName())
+          # print(f">> Writing flattened systematic histogram: {flattened_syst_histo.GetName()}"  )
+          flattened_syst_histo.Write()
+
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', '-f', help= 'File from which we want to merge bins')
 parser.add_argument('--test', '-t', action='store_true', help= 'Run statistical tests on the histograms to check compatability of smoothed and unsmoothed histograms')
@@ -321,6 +390,7 @@ newfilename=filename.replace('.root','-mergeXbins.root')
 
 original_file = ROOT.TFile(filename)
 output_file = ROOT.TFile(newfilename,"RECREATE") 
+output_flatsyst_file = ROOT.TFile(filename.replace('.root','-mergeXbins_flatSyst.root'),"RECREATE")
 
 for key in original_file.GetListOfKeys():
     if isinstance(original_file.Get(key.GetName()),ROOT.TDirectory):
@@ -328,6 +398,7 @@ for key in original_file.GetListOfKeys():
         incData = dirname.startswith("tt_tau_") or dirname.startswith("tt_fake_")
         if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs") and not dirname.startswith("tt_tau_") and not dirname.startswith("tt_fake_"): GetFFUncerts(dirname, original_file)
         getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname, incData)
+        getFlattenedSysts(output_file,output_flatsyst_file,key.GetName(),dirname, incData)
 
 if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
 

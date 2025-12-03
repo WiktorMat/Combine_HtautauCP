@@ -176,7 +176,7 @@ parser.add_argument('--signif', action='store_true', help='do significance plot'
 parser.add_argument('--envelope', action='store_true', help='do envelope plot')
 parser.add_argument('--upper-cl', type=float, help='quote upper limit instead')
 parser.add_argument('--chop', type=float, default=100., help='remove vals above')
-parser.add_argument('--y-max', type=float, default=8., help='max y to draw')
+parser.add_argument('--y-max', type=float, default=9., help='max y to draw')
 parser.add_argument('--y-min', type=float, default=0., help='max y to draw')
 parser.add_argument('--x-max', type=float, default=None, help='max x to draw')
 parser.add_argument('--x-min', type=float, default=None, help='min x to draw')
@@ -301,6 +301,51 @@ main_scan['func'].SetLineColor(ROOT.TColor.GetColor("#000099"))
 #main_scan['func'].Draw('same') # uncomment to draw spline
 main_scan['graph'].Draw('PSAME')
 
+if 'cmb' in args.output:
+    ch_label = '#tau_{h}#tau_{h}/#mu#tau_{h}/e#tau_{h}'
+elif 'tt' in args.output:
+    ch_label = '#tau_{h}#tau_{h}'
+elif 'mt' in args.output:
+    ch_label = '#mu#tau_{h}'
+elif 'et' in args.output:
+    ch_label = 'e#tau_{h}'
+elif 'a1a1' in args.output:
+    ch_label = 'a_{1}^{3pr}a_{1}^{3pr}'
+elif 'a11pra1' in args.output:
+    ch_label = 'a_{1}^{1pr}a_{1}^{3pr}'
+elif 'pia11pr' in args.output:
+    ch_label = '#pi a_{1}^{1pr}'
+elif 'pirho' in args.output:
+    ch_label = '#pi #rho'
+elif 'rhoa11pr' in args.output:
+    ch_label = '#rho a_{1}^{1pr}/a_{1}^{1pr}a_{1}^{1pr}'
+elif 'pia1' in args.output:
+    ch_label = '#pi a_{1}^{3pr}'
+elif 'pipi' in args.output:
+    ch_label = '#pi #pi'
+elif 'rhorho' in args.output:
+    ch_label = '#rho #rho'
+elif 'rhoa1' in args.output:
+    ch_label = '#rho a_{1}^{3pr}'
+elif 'ea11pr' in args.output:
+    ch_label = 'e a_{1}^{1pr}'
+elif 'erho' in args.output:
+    ch_label = 'e #rho'
+elif 'ea1' in args.output:
+    ch_label = 'e a_{1}^{3pr}'
+elif 'epi' in args.output:
+    ch_label = 'e #pi'
+elif 'mua11pr' in args.output:
+    ch_label = '#mu a_{1}^{1pr}'
+elif 'murho' in args.output:
+    ch_label = '#mu #rho'
+elif 'mua1' in args.output:
+    ch_label = '#mu a_{1}^{3pr}'
+elif 'mupi' in args.output:
+    ch_label = '#mu #pi'
+
+
+
 if args.POI == 'alpha':
   import scipy.stats
   significance = np.sign(main_scan['func'].Eval(90.)-main_scan['func'].Eval(0.))*math.sqrt(scipy.stats.chi2.ppf(scipy.stats.chi2.cdf(abs(main_scan['func'].Eval(90.)-main_scan['func'].Eval(0.)),1),1))
@@ -311,7 +356,8 @@ if args.POI == 'alpha':
   latex.SetTextSize(0.04)
   latex.SetTextAlign(12)
 #   latex.DrawLatex(.7,.9,"0^{+} vs 0^{-} = %.2f#sigma" % significance)
-  latex.DrawLatex(.7,.9,"Obs vs 0^{-} = %.2f#sigma" % ps_significance)
+  latex.DrawLatex(.7,.9,"Exp/ vs 0^{-} = %.2f#sigma" % ps_significance)
+  latex.DrawLatex(.7, .85, f"#font[42]{{{ch_label}}}")
   print("0^{+} vs 0^{-} = %.3f#sigma" % significance)
   print('max sigma = ', max_significance)
   print('best vs CP-odd sigma = ', ps_significance)
@@ -475,6 +521,7 @@ if args.json is not None:
 plot.DrawCMSLogo(pads[0], args.logo, args.logo_sub, 10, 0.035, 0.035, 1.2, cmsTextSize=1.0)
 
 if not args.no_title: plot.DrawTitle(pads[0], '62.4 fb^{-1} (13.6 TeV)', 3) # early Run 3
+# if not args.no_title: plot.DrawTitle(pads[0], '200.4 fb^{-1} (13/13.6 TeV)', 3) # combination
 # if not args.no_title: plot.DrawTitle(pads[0], '58 fb^{-1} (13 TeV)', 3) # 16+17+18
 pads[0].SetTicks(1)
 

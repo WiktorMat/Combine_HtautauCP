@@ -36,6 +36,43 @@ cp_bins = {
         "et_higgs_erho_mTLt65": 10
 }
 
+
+# background cats (to be added for chi2 tests)
+# "tt_tau_pia1" : 4,
+# "tt_tau_a11pra1" : 4,
+# "tt_tau_rhoa1" : 10,
+# "tt_tau_pia11pr" : 4,
+# "tt_tau_pirho" : 10,
+# "tt_tau_a1a1" : 4,
+# "tt_tau_pipi" : 4,
+# "tt_tau_rhoa11pr" : 10,
+# "tt_tau_rhorho" : 10,
+# "tt_fake_pia1" : 4,
+# "tt_fake_a11pra1" : 4,
+# "tt_fake_rhoa1" : 10,
+# "tt_fake_pia11pr" : 4,
+# "tt_fake_pirho" : 10,
+# "tt_fake_a1a1" : 4,
+# "tt_fake_pipi" : 4,
+# "tt_fake_rhoa11pr" : 10,
+# "tt_fake_rhorho" : 10,
+# "mt_tau_mua1_mTLt65": 10,
+# "mt_tau_mua11pr_mTLt65": 8,
+# "mt_tau_mupi_mTLt65": 8,
+# "mt_tau_murho_mTLt65": 10,
+# "et_tau_ea1_mTLt65": 10,
+# "et_tau_ea11pr_mTLt65": 8,
+# "et_tau_epi_mTLt65": 8,
+# "et_tau_erho_mTLt65": 10,
+# "mt_fake_mua1_mTLt65": 10,
+# "mt_fake_mua11pr_mTLt65": 8,
+# "mt_fake_mupi_mTLt65": 8,
+# "mt_fake_murho_mTLt65": 10,
+# "et_fake_ea1_mTLt65": 10,
+# "et_fake_ea11pr_mTLt65": 8,
+# "et_fake_epi_mTLt65": 8,
+# "et_fake_erho_mTLt65": 10,
+
 test_results_sym = {}
 test_results_flat = {}
 test_results_asym = {}
@@ -333,7 +370,7 @@ def getHistogramAndWriteToFile(infile,outfile,dirname,write_dirname, incData=Fal
 
 def getFlattenedSysts(infile,outfile,dirname,write_dirname, incData=False):
     directory = infile.Get(dirname)
-    print("Flattening certain systematics")
+    print("Flattening certain systematics:")
     histos = []
     for key in directory.GetListOfKeys():
         histo = directory.Get(key.GetName())
@@ -398,7 +435,7 @@ for key in original_file.GetListOfKeys():
         incData = dirname.startswith("tt_tau_") or dirname.startswith("tt_fake_")
         if dirname in cp_bins and dirname.startswith('tt_') and not dirname.startswith("tt_mva_higgs") and not dirname.startswith("tt_tau_") and not dirname.startswith("tt_fake_"): GetFFUncerts(dirname, original_file)
         getHistogramAndWriteToFile(original_file,output_file,key.GetName(),dirname, incData)
-        getFlattenedSysts(output_file,output_flatsyst_file,key.GetName(),dirname, incData)
+        # getFlattenedSysts(output_file,output_flatsyst_file,key.GetName(),dirname, incData)  # enable this to flatten systmatic variations
 
 if 'tt_mva_higgs' in ff_aiso_yields and 'tt_mva_tau' in ff_aiso_yields and 'tt_mva_fake' in ff_aiso_yields:
 

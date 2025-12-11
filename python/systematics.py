@@ -50,8 +50,7 @@ def AddSMRun3Systematics(cb):
     ###############################################
     # Pileup
     ###############################################
-
-    # TODO: pileup? (not included for Run-2, but we could add it)
+    cb.cp().process(mc_procs).AddSyst(cb, 'CMS_pileup', "shape", ch.SystMap()(1.0))
 
     ###############################################
     # Cross sections and BRs
@@ -110,94 +109,147 @@ def AddSMRun3Systematics(cb):
     cb.cp().process(sig_procs['ggH']+sig_procs['VBF']).AddSyst(cb, "ps_fsr_signal", "shape", ch.SystMap()(1.0))
 
     # DY shape uncertainty (e.g from pT/mass reweighting)
-    cb.cp().process(dy_procs).AddSyst(cb, "dy_pt_reweighting", "shape", ch.SystMap()(1.0))
+    cb.cp().process(dy_procs).AddSyst(cb, "CMS_HIG25012_Z_pt_reweighting", "shape", ch.SystMap()(1.0))
 
     # ttbar shape uncertainty (e.g from pT reweighting)
-    cb.cp().process(ttbar_procs).AddSyst(cb, "top_pt_reweighting", "shape", ch.SystMap()(1.0))
+    cb.cp().process(ttbar_procs).AddSyst(cb, "CMS_Top_pt_reweighting", "shape", ch.SystMap()(1.0))
     
     ###############################################
     # Offline object identification
     ###############################################
 
-    # TODO: muon ID
-    
-    # TODO: electron ID
-    
-    # TODO: add uncerts for l->tau fakes as well
-    # TODO: add specific bins for et and mt channels as well
+    # muon ID and isolation
+    cb.cp().process(mc_procs).channel(['mt']).AddSyst(cb, "CMS_eff_m_id", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['mt']).AddSyst(cb, "CMS_eff_m_iso", "shape", ch.SystMap()(1.0))
+
+    # electron ID and reco
+    cb.cp().process(mc_procs).channel(['et']).AddSyst(cb, "CMS_eff_e_reco_13p6TeV", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['et']).AddSyst(cb, "CMS_eff_e_id_13p6TeV", "shape", ch.SystMap()(1.0))
+
+    # electron scale and smearing
+    cb.cp().process(mc_procs).channel(['et']).AddSyst(cb, "CMS_scale_e_13p6TeV", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['et']).AddSyst(cb, "CMS_res_e_13p6TeV", "shape", ch.SystMap()(1.0))
+
+    # mu->tau fakes (ZL only in mt)
+    for era in eras:
+        for eta in ['0p0','0p4','0p8','1p2','1p7']:
+            cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSmu_{era}_eta_{eta}', 'shape', ch.SystMap()(1.0))
+            # TODO: increase/decouple uncertainties
+
+    # e->tau fakes (ZL only in et)
+    for era in eras:
+        for eta in ['0p0', '1p5']:
+            cb.cp().process(mc_procs).process(['ZL']).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}', 'shape', ch.SystMap()(1.0))
+            # TODO: increase/decouple uncertainties
+
+    # Genuine Tau ID
 
     for era in eras:
         # statistical uncertainties from fitted function parameters
         for u in ['stat1','stat2']:
             for dm in ['0', '1', '2', '10']:
-                cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-                cb.cp().process(['ZL']).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+                cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+                # uncomment the line below if want ZL to have Tau ID unct. as well
+                # cb.cp().process(['ZL']).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
 
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_{u}_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
+            # Add DM specific uncertainties for other bins (tt channels)
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
+            # Add DM specific uncertainties for other bins (lt channels)
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt'], False).bin_id([4]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt'], False).bin_id([3]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt'], False).bin_id([6]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL'], False).channel(['tt'], False).bin_id([5]).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_{u}_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
+
 
         # systematic that is correlated across decay modes but decorrelated across eras
-        cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_{era}', 'shape', ch.SystMap()(1.0))
-        cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_{era}', 'shape', ch.SystMap()(1.0))
-
+        cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_syst_{era}', 'shape', ch.SystMap()(1.0))
     # systematic that is correlated across eras and decay modes
-    cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_alleras', 'shape', ch.SystMap()(1.0))
-    cb.cp().process(['ZL']).channel(['tt']).AddSyst(cb, f'CMS_eff_t_DeepTau2018v2p5_VSjet_dm_syst_alleras', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'], False).AddSyst(cb, f'CMS_HIG25012_eff_t_DeepTau2018v2p5_VSjet_syst_alleras', 'shape', ch.SystMap()(1.0))
 
-    # TODO: btag ID (including for fakes)
    
     ###############################################
     # Trigger
     ###############################################
 
-    # TODO: muon trigger
+    # muon trigger
+    cb.cp().process(mc_procs).channel(['mt']).AddSyst(cb, f'CMS_eff_m_trigger', 'shape', ch.SystMap()(1.0))
     
-    # TODO: electron trigger
+    # electron trigger
+    cb.cp().process(mc_procs).channel(['et']).AddSyst(cb, f'CMS_eff_e_trigger', 'shape', ch.SystMap()(1.0))
 
+    # tau trigger
     # statistical uncertainties
     for era in eras:
         # tau leg uncertainties
         for trig in ['ditau','ditaujet']:
             for dm in ['0', '1', '2', '10']:
-                cb.cp().process(mc_procs).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+                cb.cp().process(mc_procs).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
 
         # jet leg uncertainties
-        cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, f'CMS_trig_j_ditaujet_{era}', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, f'CMS_HIG25012_trig_j_ditaujet_{era}', 'shape', ch.SystMap()(1.0))
 
     # We also add a 3% systematic uncertainty due to the background modelling in the SF extraction based on the studies in https://indico.cern.ch/event/1263107/contributions/5306043/attachments/2606862/4503028/tautriggerSF_checks.pdf
-    cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, "CMS_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
+    cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, "CMS_HIG25012_trig_t_ditau_syst", "lnN", ch.SystMap()(1.03))
     
     ###############################################
     # Lepton/Tau energy scales
     ###############################################
 
-    # TODO: electron ES
-    
-    # TODO: muon ES ? (not included for Run-2 as it was small)
 
+
+    # e->tau fake energy scale
     for era in eras:
         for dm in ['0', '1', '2', '10']:
-            cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL']).channel(['et']).bin_id([1,2]).AddSyst(cb, f'CMS_scale_e_DeepTau2018v2p5_DM{dm}PNet_{era}_genElectron', 'shape', ch.SystMap()(1.0))
 
-        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM0PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
-        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM1PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
-        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM2PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
-        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_scale_t_DeepTau2018v2p5_DM10PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['et']).bin_id([4]).AddSyst(cb, f'CMS_scale_e_DeepTau2018v2p5_DM0PNet_{era}_genElectron', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['et']).bin_id([3]).AddSyst(cb, f'CMS_scale_e_DeepTau2018v2p5_DM1PNet_{era}_genElectron', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['et']).bin_id([6]).AddSyst(cb, f'CMS_scale_e_DeepTau2018v2p5_DM2PNet_{era}_genElectron', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['et']).bin_id([5]).AddSyst(cb, f'CMS_scale_e_DeepTau2018v2p5_DM10PNet_{era}_genElectron', 'shape', ch.SystMap()(1.0))
 
 
-    #TODO: add for mt and et specific bins as well         
-    #TODO: add the ones for the l->tau fakes for mt and et channels (ZL only)
+    # mu->tau fake energy scale
+    for era in eras:
+        for dm in ['0', '1', '2', '10']:
+            cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).bin_id([1,2]).AddSyst(cb, f'CMS_scale_mu_DeepTau2018v2p5_DM{dm}PNet_{era}_genMuon', 'shape', ch.SystMap()(1.0))
 
-    
-    
+        cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).bin_id([4]).AddSyst(cb, f'CMS_scale_mu_DeepTau2018v2p5_DM0PNet_{era}_genMuon', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).bin_id([3]).AddSyst(cb, f'CMS_scale_mu_DeepTau2018v2p5_DM1PNet_{era}_genMuon', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).bin_id([6]).AddSyst(cb, f'CMS_scale_mu_DeepTau2018v2p5_DM2PNet_{era}_genMuon', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL']).channel(['mt']).bin_id([5]).AddSyst(cb, f'CMS_scale_mu_DeepTau2018v2p5_DM10PNet_{era}_genMuon', 'shape', ch.SystMap()(1.0))
+
+    # genuine tau energy scale
+    for era in eras:
+        for dm in ['0', '1', '2', '10']:
+            cb.cp().process(mc_procs).process(['ZL'], False).bin_id([1,2]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM{dm}PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM0PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM1PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM2PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM10PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt'], False).bin_id([4]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM0PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt'], False).bin_id([3]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM1PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt'], False).bin_id([6]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM2PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+        cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt'], False).bin_id([5]).AddSyst(cb, f'CMS_HIG25012_scale_t_DeepTau2018v2p5_DM10PNet_{era}_genTau', 'shape', ch.SystMap()(1.0))
+
     ###############################################
-    # Jet/MET scale/resolutions 
+    # IP significance cut
+    ###############################################
+    for tautype in ['prompt', 'tauDecay']:
+        for eta in ['Lt1p0', '1p0to1p6', 'Gt1p6']:
+            cb.cp().process(mc_procs).channel(['tt'], False).AddSyst(cb, f'CMS_HIG25012_eff_IPSigCut_{tautype}_eta_{eta}', 'shape', ch.SystMap()(1.0))
+
+
+    ###############################################
+    # Jet/MET scale/resolutions
     ###############################################
 
     # TODO: Might need to split by eras or even into all the sources
@@ -210,8 +262,8 @@ def AddSMRun3Systematics(cb):
     
     # MET recoil uncertainties
 
-    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_scale_met', 'shape', ch.SystMap()(1.0))
-    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_res_met', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_HIG25012_scale_met', 'shape', ch.SystMap()(1.0))
+    cb.cp().process(recoil_procs).AddSyst(cb,'CMS_HIG25012_res_met', 'shape', ch.SystMap()(1.0))
     
     ###############################################
     # jet->tau fake-factors
@@ -220,46 +272,63 @@ def AddSMRun3Systematics(cb):
     # TODO: FF uncertainties - need to be added for et and mt channels as well
 
     # tt channel statistical uncertainties
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,7,8,9,10]).AddSyst(cb, "ff_tt_stat_dm0", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,3,4,5,7]).AddSyst(cb, "ff_tt_stat_dm1", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,4,10,11]).AddSyst(cb, "ff_tt_stat_dm2", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,5,6,9,11]).AddSyst(cb, "ff_tt_stat_dm10", "shape", ch.SystMap()(1.0))
+    for njets in [0,1,2]:
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,7,8,9,10]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm0_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,3,4,5,7]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm1_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,4,10,11]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm2_{njets}j", "shape", ch.SystMap()(1.0))
+        cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2,5,6,9,11]).AddSyst(cb, f"CMS_HIG25012_fake_t_stat_dm10_{njets}j", "shape", ch.SystMap()(1.0))
 
     # add lnN FF uncertainty from yml file located in configs/ff_lnN_uncertainties.yml
     # open yml file and read uncertainties
     with open('configs/ff_lnN_uncertainties.yml', 'r') as f:
         ff_lnN_uncertainties = yaml.safe_load(f)
-        cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "ff_tt_syst_lnN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt']['correlated']))
+        cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "CMS_HIG25012_fake_t_syst_lnN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt']['correlated']))
         for i in range(1, 12):
             # add lnN uncertainty for each decay mode
-            cb.cp().process(['JetFakes']).channel(['tt']).bin_id([i]).AddSyst(cb, "ff_tt_syst_lnN_$BIN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt'][cats_tt[i]]))
+            cb.cp().process(['JetFakes']).channel(['tt']).bin_id([i]).AddSyst(cb, "CMS_HIG25012_fake_t_syst_lnN_$BIN", "lnN", ch.SystMap()(ff_lnN_uncertainties['tt'][cats_tt[i]]))
 
     # add shape uncertainties for BDT score, this is decorrelated between tau, fake, and higgs categories
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1]).AddSyst(cb, "ff_tt_syst_BDTshape_tau", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([2]).AddSyst(cb, "ff_tt_syst_BDTshape_fake", "shape", ch.SystMap()(1.0))
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "ff_tt_syst_BDTshape_higgs", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1]).AddSyst(cb, "CMS_HIG25012_fake_t_syst_BDTshape_tau", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([2]).AddSyst(cb, "CMS_HIG25012_fake_t_syst_BDTshape_fake", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "CMS_HIG25012_fake_t_syst_BDTshape_higgs", "shape", ch.SystMap()(1.0))
 
     # add shape uncertainties for aco angle, this is decorrelated between categories
-    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "ff_tt_syst_acoshape_$BIN", "shape", ch.SystMap()(1.0))
-
+    cb.cp().process(['JetFakes']).channel(['tt']).bin_id([1,2], False).AddSyst(cb, "CMS_HIG25012_fake_t_syst_acoshape_$BIN", "shape", ch.SystMap()(1.0))
     # uncertainty due to subtracted real taus in the tt channel
-    cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "ff_tt_sub_syst", "shape", ch.SystMap()(1.0))
+    cb.cp().process(['JetFakes']).channel(['tt']).AddSyst(cb, "CMS_HIG25012_fake_t_sub_syst", "shape", ch.SystMap()(1.0))
     # lnN uncertainty for the JetFakesSublead as it is estimated from MC
-    cb.cp().process(['JetFakesSublead']).channel(['tt']).AddSyst(cb, "ff_tt_mc", "lnN", ch.SystMap()(1.3))
+    cb.cp().process(['JetFakesSublead']).channel(['tt']).AddSyst(cb, "CMS_HIG25012_fake_t_mc", "lnN", ch.SystMap()(1.3))
+
+    # mt and et channel FF uncertainties
+    for ff_type in ['wj','qcd','mc_top']:
+        # statistics
+        for njets in [0,1,2]:
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,4]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm0_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,3]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm1_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,6]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm2_{njets}j", "shape", ch.SystMap()(1.0))
+            cb.cp().process(['JetFakes']).channel(['mt','et']).bin_id([1,2,5]).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm10_{njets}j", "shape", ch.SystMap()(1.0))
+
+        # systematic
+        cb.cp().process(['JetFakes']).channel(['mt','et']).AddSyst(cb, f"CMS_HIG25012_fake_t_{ff_type}_syst", "shape", ch.SystMap()(1.0))
+
+    # uncertainty due to subtracted real taus in the mt and et channels
+    cb.cp().process(['JetFakes']).channel(['mt','et']).AddSyst(cb, "CMS_HIG25012_fake_t_sub_syst", "shape", ch.SystMap()(1.0))
 
     ###############################################
     # 4-vectors for CP angle reconstruction
     ###############################################
-    
+
     # IP direction/scale
-    cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, "CMS_res_IP", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, "CMS_HIG25012_res_IP", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt'], False).bin_id([3,4,5,6]).AddSyst(cb, "CMS_HIG25012_res_IP", "shape", ch.SystMap()(1.0))
     
     # TODO: pi0 direction/scale (not included for Run-2 but could add)
     
     # TODO: pi direction/scale (not included for Run-2 but could add)
     
     # SV vertex resolution uncertainty
-    cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, "CMS_res_SV", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, "CMS_HIG25012_res_SV", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).channel(['tt'], False).bin_id([5]).AddSyst(cb, "CMS_HIG25012_res_SV", "shape", ch.SystMap()(1.0))
 
 
     ###############################################

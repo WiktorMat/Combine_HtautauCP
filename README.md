@@ -212,3 +212,5 @@ The fallback options are also needed as especially far from the best fit values 
 ```
 combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90 --points 21 --redefineSignalPOIs alpha  -d run2run3_comb/ws.root --algo grid -t -1 --there -n .alpha --alignEdges 1 --cminDefaultMinimizerStrategy=0 --cminDefaultMinimizerTolerance=0.1 --cminFallbackAlgo Minuit2,Migrad,0:1 --cminFallbackAlgo Minuit2,Migrad,0:2 --cminFallbackAlgo Minuit2,Migrad,0:4 --cminFallbackAlgo Minuit2,Migrad,0:10  --job-mode condor --task-name condor-run2run3-scan --sub-opts='+MaxRuntime=10800' --split-points 1
 ```
+
+then just hadd them, and run the 1D plotting code as normal

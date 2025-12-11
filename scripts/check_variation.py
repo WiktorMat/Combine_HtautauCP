@@ -20,7 +20,7 @@ ratioPad.SetGridy()
 
 
 systematics_to_check = ['CMS_HIG25012_scale_t_DeepTau2018v2p5_DM1PNet_2022EE_genTau', 'CMS_pileup', 'CMS_res_e_13p6TeV']
-processes_to_check = ['ggH_sm_prod_sm_htt125', 'qqH_sm_htt125']
+processes_to_check = ['signal', 'ZTT']
 
 for systematic_to_check in systematics_to_check:
 
@@ -40,10 +40,31 @@ for systematic_to_check in systematics_to_check:
             root_file = ROOT.TFile.Open(os.path.join(path_to_files, file))
             directory = file.split("_input")[0]
 
+            if process == 'signal':
+                # add together the higgs processes
+                signals = ['ggH_sm_prod_sm_htt125', 'qqH_sm_htt125', 'WH_sm_htt125', 'ZH_sm_htt125']
+                for i, signal in enumerate(signals):
+                    # add together all histos
+                    h_nom_s = root_file.Get(f"{directory}/{signal}")
+                    h_up_s = root_file.Get(f"{directory}/{signal}_{systematic_to_check}Up")
+                    h_down_s = root_file.Get(f"{directory}/{signal}_{systematic_to_check}Down")
 
-            histo_nom = root_file.Get(f"{directory}/{process}")
-            histo_up   = root_file.Get(f"{directory}/{process}_{systematic_to_check}Up")
-            histo_down = root_file.Get(f"{directory}/{process}_{systematic_to_check}Down")
+                    if not h_up_s or not h_down_s or not h_nom_s:
+                        print("Warning: Missing one or more histograms, skipping this variation: " + f"{directory}/{signal}" + f" for syst: {systematic_to_check}")
+                        continue
+
+                    if i == 0:
+                        histo_nom = h_nom_s.Clone("histo_nom")
+                        histo_up   = h_up_s.Clone("histo_up")
+                        histo_down = h_down_s.Clone("histo_down")
+                    else:
+                        histo_nom.Add(h_nom_s)
+                        histo_up.Add(h_up_s)
+                        histo_down.Add(h_down_s)
+            else:
+                histo_nom = root_file.Get(f"{directory}/{process}")
+                histo_up   = root_file.Get(f"{directory}/{process}_{systematic_to_check}Up")
+                histo_down = root_file.Get(f"{directory}/{process}_{systematic_to_check}Down")
 
             # if not histo_nom:
             #     raise ValueError(f"Missing nominal histogram in {file} for {process}")

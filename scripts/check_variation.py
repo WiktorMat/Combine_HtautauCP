@@ -4,7 +4,7 @@ import os
 ROOT.gStyle.SetOptStat(0)
 
 # directory containing variations
-path_to_files = '/vols/cms/lcr119/offline/HiggsCP/CMSSW_14_1_0_pre4/src/CombineHarvester/Combine_HtautauCP/outputs/Dec5_ForAN/cmb/common'
+path_to_files = '/vols/cms/lcr119/offline/HiggsCP/CMSSW_14_1_0_pre4/src/CombineHarvester/Combine_HtautauCP/outputs/Jan5_PreApp/cmb/common'
 
 # Create canvas
 c = ROOT.TCanvas("c", "c", 800, 800)
@@ -19,12 +19,14 @@ ratioPad.SetPad(0.0, 0.00, 1.0, 0.20)
 ratioPad.SetGridy()
 
 
-systematics_to_check = ['CMS_HIG25012_scale_t_DeepTau2018v2p5_DM1PNet_2022EE_genTau', 'CMS_pileup', 'CMS_res_e_13p6TeV']
-processes_to_check = ['signal', 'ZTT']
+# systematics_to_check = ['CMS_pileup', 'CMS_HIG25012_scale_t_DM1PNet_2022EE', 'CMS_HIG25012_scale_t_DM10PNet_2022EE', 'CMS_scale_j_Absolute_2022EE', 'CMS_res_j_2022EE']
+systematics_to_check = ['CMS_HIG25012_Z_pt_reweighting']
+# processes_to_check = ['signal', 'ZTT']
+processes_to_check = ['ZTT']
 
 for systematic_to_check in systematics_to_check:
 
-    output_pdf = f'syst_checks/check_vars_{systematic_to_check}.pdf'
+    output_pdf = f'syst_checks_Jan/check_vars_{systematic_to_check}.pdf'
     # Open the multipage PDF
     c.Print(output_pdf + "[")
 

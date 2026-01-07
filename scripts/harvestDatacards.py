@@ -175,8 +175,8 @@ for chn in chans:
 # for QCD scale uncertainties we need to scale the yields to factor out any differences in XS
 #TODO: will need updating onces datacards templates are renamed
 for proc in ['ggH','qqH']:
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_ren_signal_ACCEPT",f"QCDscale_ren_{proc}_ACCEPT")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_fac_signal_ACCEPT",f"QCDscale_fac_{proc}_ACCEPT")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_ren_signal",f"QCDscale_ren_{proc}_ACCEPT")
+    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_fac_signal",f"QCDscale_fac_{proc}_ACCEPT")
     cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_isr_signal",f"ps_isr_{proc}")
     cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_fsr_signal",f"ps_fsr_{proc}")
 

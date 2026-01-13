@@ -385,6 +385,11 @@ cb.ForEachProc(NegativeBins)
 print(green(">>> Zeroing negative yields"))
 cb.ForEachProc(NegativeYields)
 
+# Get nominal histograms for all processes (needed when setting systematics)
+cb.ForEachProc(GetNominalHisto)
+print(green(">>> Zeroing negative systematics"))
+cb.ForEachSyst(DetectNegativeSyst)
+
 # Write datacards
 print(green(">>> Writing datacards..."))
 datacardtxt  = "%s/$TAG/$BIN.txt" % (output_folder)

@@ -6,15 +6,10 @@ def green(string,**kwargs):
 
 def NegativeBins(p):
     '''Replaces negative bins in hists with 0'''
-    hist = p.shape()
-    has_negative = False
+    hist = p.shape().Clone()
     for i in range(1,hist.GetNbinsX()+1):
-      if hist.GetBinContent(i) < 0:
-         has_negative = True
-         print("(Process, Channel, Bin) = (%s, %s, %s) has negative bins." % (p.process(), p.channel(), p.bin()))
-    if (has_negative):
-      for i in range(1,hist.GetNbinsX()+1):
-         if hist.GetBinContent(i) < 0:
+        if hist.GetBinContent(i) < 0:
+            print("(Process, Channel, Bin) = (%s, %s, %s) has negative bins." % (p.process(), p.channel(), p.bin()))
             hist.SetBinContent(i,0)
     p.set_shape(hist,False)
 
@@ -27,11 +22,16 @@ def GetNominalHisto(p):
 
 def ZeroNegativeBins(hist, name, type='up/down'):
     '''Sets negative bins in a histogram to zero'''
+    integral_before = hist.Integral()
     negative_bins = False
     for i in range(1, hist.GetNbinsX() + 1):
         if hist.GetBinContent(i) < 0:
             negative_bins = True
             hist.SetBinContent(i, 0)
+    # update integral
+    integral_after = hist.Integral()
+    if integral_after > 0:
+        hist.Scale(integral_before/integral_after)
     return negative_bins, hist
 
 def DetectNegativeSyst(s):
@@ -45,10 +45,7 @@ def DetectNegativeSyst(s):
         if is_neg_up or is_neg_down:
             print(f">>>>> Negative bins found for systematic: {s.name()} for process: {s.process()} and category: {s.bin()}")
             nominal_hist = nominal_histograms[s.process()+'_'+s.bin()].Clone()
-            print(nominal_hist.Integral())
             s.set_shapes(new_up_histo, new_down_histo, nominal_hist)
-            print("SUCCESSFULLY SET NEW SHAPES")
-            print('-'*100)
 
 def NegativeYields(p):
     '''If process has negative yield then set to 0'''

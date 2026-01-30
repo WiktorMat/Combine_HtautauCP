@@ -433,7 +433,7 @@ if __name__ == "__main__":
         # add extra axis for the phiCP angle
         scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
         y_axis = 0.3 * scale
-        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,400,"NS")
+        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,0,2*math.pi,400,"NS")
         extra_axis.SetLabelSize(0)
         #extra_axis.SetLabelFont(42)
         extra_axis.SetMaxDigits(2)
@@ -444,8 +444,8 @@ if __name__ == "__main__":
         extra_axis.SetTickSize(0.08)
         extra_axis.Draw()  
 
-        positions = [-math.pi, -math.pi/2, 0, math.pi/2, math.pi]
-        labels = ["-#pi", "-#pi/2", "0", "#pi/2", "#pi"]
+        positions = [0, math.pi/2, math.pi, 3*math.pi/2, 2*math.pi]
+        labels = ["0", "#pi/2", "#pi", "3#pi/2", "2#pi"]
         
         # Use TLatex to manually draw labels
         latex = ROOT.TLatex()
@@ -457,7 +457,7 @@ if __name__ == "__main__":
 
         # Map axis positions to pad x-coordinates
         for i, xval in enumerate(positions):
-            x_pixel = (xval + math.pi) / (2 * math.pi) * Nxbins  # from axis range to pixel
+            x_pixel = (xval) / (2 * math.pi) * Nxbins  # from axis range to pixel
             latex.DrawLatex(x_pixel, y_axis - 0.3 * scale, labels[i])  # adjust vertical offset as needed
 
         latex.SetNDC()

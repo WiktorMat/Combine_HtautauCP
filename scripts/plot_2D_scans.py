@@ -25,6 +25,8 @@ def get_args():
     parser.add_argument('--file', type=str, help="file", required=True)
     parser.add_argument('--kappas', action='store_true', help="2D kappa scan")
     parser.add_argument('--mutautau', action='store_true', help="Signal strength vs alpha")
+    parser.add_argument('--muvsmu', action='store_true', help="mu ggH vs mu V")
+
     return parser.parse_args()
 
 def main(args):
@@ -129,9 +131,56 @@ def main(args):
         plt.ylabel(r"$\mu$")
         plt.tight_layout()
         ax.legend(handles=[sm_plot, bestfit_plot], loc='upper left')
-        ax.yaxis.set_major_locator(ticker.MultipleLocator(1, offset=0.0))
+        ax.set_xticks([-90, -45, 0, 45, 90])
+        ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+        # ax.yaxis.set_major_locator(ticker.MultipleLocator(1, offset=0.0))
         hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='200', com='13/13.6', fontsize=18)
         plt.savefig("mutautauVsalpha.pdf")
+
+    if args.muvsmu:
+
+        arrays = df.AsNumpy(["muggH", "muV", "nll"])
+        muggH = arrays["muggH"]
+        muV = arrays["muV"]
+        nll = arrays["nll"]
+
+        # interpolate NLL onto a fine grid
+        x_grid = np.linspace(muV.min(), muV.max(), 3000)
+        y_grid = np.linspace(muggH.min(), muggH.max(), 3000)
+        X, Y = np.meshgrid(x_grid, y_grid)
+        NLL_grid = griddata(points=(muV, muggH), values=nll, xi=(X, Y), method='cubic')
+
+        # Get contours (using ROOT for NLL number)
+        confidence = [0.683, 0.9545, 0.9973]
+        levels = [ROOT.Math.chisquared_quantile_c(1 - cl, 2) for cl in confidence]
+
+        print(f"Using NLL thresholds: 1sigma={levels[0]}, 2sigma={levels[1]}, 3sigma={levels[2]}")
+
+        fig, ax = plt.subplots(figsize=(8,6.5))
+        # Add NLL and contours
+        im = ax.imshow(NLL_grid, origin='lower', extent=[X.min(), X.max(), Y.min(), Y.max()],cmap=cmap, vmin=0, vmax=25)
+        plt.colorbar(im, label=r"$-2\Delta\ln \mathcal{L}$")
+        contours = ax.contour(NLL_grid, levels=levels, colors='black', linestyles=['solid', 'dashdot', 'dashed'], origin='lower', extent=[x_grid.min(), x_grid.max(), y_grid.min(), y_grid.max()])
+        # this is hacky but make legends for contours
+        contour_handles = []
+        for line, CL in zip(['solid', 'dashdot', 'dashed'], confidence):
+            h, = ax.plot([], [], color='black', linestyle=line, label=f'{CL:.1%} CL')
+            contour_handles.append(h)
+        legend_contours = ax.legend(handles=contour_handles, loc='upper right')
+        ax.add_artist(legend_contours)
+        # Add SM and bestfit points
+        sm_plot = ax.scatter([1.0], [1.0], marker="*", color='red', s=144, label='SM')
+        bestfit_plot = ax.scatter(bestfit['muV'], bestfit['muggH'], marker="P", color='white', edgecolors='black', s=144, linewidths=1, label='Best fit')
+        ax.set_aspect("auto")
+        plt.xlabel(r"$\mu_{V}$")
+        plt.ylabel(r"$\mu_{ggH}$")
+        plt.tight_layout()
+        ax.legend(handles=[sm_plot, bestfit_plot], loc='upper left')
+        # ax.set_xticks([-90, -45, 0, 45, 90])
+        # ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+        # ax.yaxis.set_major_locator(ticker.MultipleLocator(1, offset=0.0))
+        hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='62.4', com='13.6', fontsize=18)
+        plt.savefig("muggHVsmuV.pdf")
 
 
 if __name__ == "__main__":

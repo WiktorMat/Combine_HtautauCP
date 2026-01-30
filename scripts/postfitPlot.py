@@ -127,7 +127,9 @@ def MakeRatioGraph(num,denom):
         if denom_y != 0:
             ratio.SetPoint(i, x, y/denom_y)
             # keep the relative errors the same
-            ratio.SetPointError(i, ratio.GetErrorXlow(i), ratio.GetErrorXhigh(i), ratio.GetErrorYlow(i)/y*ratio.GetY()[i], ratio.GetErrorYhigh(i)/y*ratio.GetY()[i])
+            y_high = ratio.GetErrorYhigh(i)/denom_y
+            y_low = ratio.GetErrorYlow(i)/denom_y
+            ratio.SetPointError(i, ratio.GetErrorXlow(i), ratio.GetErrorXhigh(i), y_low, y_high)
         else:
             ratio.SetPoint(i, x, 0)
             ratio.SetPointError(i, 0., 0., 0., 0.)
@@ -138,7 +140,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Post-fit plot script for Htautau CP analysis')
     parser.add_argument('--input_file', '-i',  type=str, default='shapes_output.root',
                         help='Input ROOT file containing histograms')
-    parser.add_argument('--input_file_ps', type=str, default='shapes_output_ps.root',
+    parser.add_argument('--input_file_ps', type=str,
                         help='Input ROOT file containing pseudoscalar histograms (optional)')
     parser.add_argument('--bin_name', '-b', type=str, default='htt_tt_3_13p6TeV',
                         help='Name of the bin to plot')
@@ -150,6 +152,8 @@ if __name__ == "__main__":
                         help='Luminosity label for the plot')
     parser.add_argument('--dir', type=str, default="",
                         help='Output directory for the plots')
+    parser.add_argument('--prefit', action='store_true',
+                        help='prefit_plot')
 
     args = parser.parse_args()
 
@@ -179,6 +183,58 @@ if __name__ == "__main__":
     lumi = args.lumi
     bin_name = args.bin_name
     channel = bin_name[4:6]
+
+
+    if 'tt_6' in bin_name:
+        ch_label = 'a_{1}^{3pr}a_{1}^{3pr}'
+    elif 'tt_11' in bin_name:
+        ch_label = 'a_{1}^{1pr}a_{1}^{3pr}'
+    elif 'tt_10' in bin_name:
+        ch_label = '#pi a_{1}^{1pr}'
+    elif 'tt_7' in bin_name:
+        ch_label = '#pi#rho'
+    elif 'tt_4' in bin_name:
+        ch_label = '#rho a_{1}^{1pr}/a_{1}^{1pr}a_{1}^{1pr}'
+    elif 'tt_9' in bin_name:
+        ch_label = '#pi a_{1}^{3pr}'
+    elif 'tt_8' in bin_name:
+        ch_label = '#pi#pi'
+    elif 'tt_3' in bin_name:
+        ch_label = '#rho#rho'
+    elif 'tt_5' in bin_name:
+        ch_label = '#rho a_{1}^{3pr}'
+    elif 'et_6' in bin_name:
+        ch_label = 'ea_{1}^{1pr}'
+    elif 'et_3' in bin_name:
+        ch_label = 'e#rho'
+    elif 'et_5' in bin_name:
+        ch_label = 'ea_{1}^{3pr}'
+    elif 'et_4' in bin_name:
+        ch_label = 'e#pi'
+    elif 'mt_6' in bin_name:
+        ch_label = '#mua_{1}^{1pr}'
+    elif 'mt_3' in bin_name:
+        ch_label = '#mu#rho'
+    elif 'mt_5' in bin_name:
+        ch_label = '#mua_{1}^{3pr}'
+    elif 'mt_4' in bin_name:
+        ch_label = '#mu#pi'
+    elif 'tt_1' in bin_name or 'tt_2' in bin_name:
+        ch_label = '#tau_{h}#tau_{h}'
+    elif 'mt_1' in bin_name or 'mt_2' in bin_name:
+        ch_label = '#mu#tau_{h}'
+    elif 'et_1' in bin_name or 'et_2' in bin_name:
+        ch_label = 'e#tau_{h}'
+    if '_tt_8' in bin_name:
+        ch_bins = ['(BDT 0.33-0.7)', '(BDT 0.7-0.8)', '(BDT 0.8-1.0)']
+    elif '_tt_' in bin_name:
+        ch_bins = ['(BDT 0.33-0.7)', '(BDT 0.7-0.8)', '(BDT 0.8-0.9)', '(BDT 0.9-1.0)']
+    elif '_mt_' in bin_name:
+        ch_bins = ['(BDT 0.33-0.57)', '(BDT 0.57-0.68)', '(BDT 0.68-0.77)', '(BDT 0.77-0.85)', '(BDT 0.85-1.0)']
+    elif '_et_' in bin_name:
+        ch_bins = ['(BDT 0.33-0.57)', '(BDT 0.57-0.71)', '(BDT 0.71-1.0)']
+
+
     input_file = ROOT.TFile(args.input_file)
    
     if args.input_file_ps:
@@ -186,8 +242,7 @@ if __name__ == "__main__":
     else: input_file_ps = None
     autoblind = args.autoblind
     norm_bins = args.norm_bins
-    
-    ratio_range = '0.0,2.0'
+
     signal_scale = 1.0
     
     if norm_bins:
@@ -195,10 +250,20 @@ if __name__ == "__main__":
     else: 
         y_title = 'Events'
     
-    is_1d_bin = bin_name in ['htt_mt_1_13p6TeV', 'htt_mt_2_13p6TeV', 'htt_tt_1_13p6TeV', 'htt_tt_2_13p6TeV']
+    is_1d_bin = bin_name in ['htt_mt_1_13p6TeV', 'htt_mt_2_13p6TeV', 'htt_et_1_13p6TeV', 'htt_et_2_13p6TeV', 'htt_tt_1_13p6TeV', 'htt_tt_2_13p6TeV']
+
+    if is_1d_bin:
+        ratio_range = '0.75,1.25'
+    else:
+        ratio_range = '0.0,2.0'
+
+
     if is_1d_bin:
         plot.ModTDRStyle(width=900, height=800, r=0.3, l=0.15)
-        x_title = 'BDT score'
+        if 't_1' in bin_name:
+            x_title = 'BDT score (Tau)'
+        elif 't_2' in bin_name:
+            x_title = 'BDT score (Fake)'
         logy = False
         extra_pad = 0.15
     else:
@@ -276,21 +341,49 @@ if __name__ == "__main__":
         sighist.Scale(1.0,"width")
         datahist.Scale(1.0,"width")
     
-    background_schemes = {
-        'mt':[
-                backgroundComp("Others",["ZL","VVT","TT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
-                backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(192,232,100)),
-                backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
-                backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
-                ],
-        'tt':[
-                backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
-                backgroundComp("Jet#rightarrow#tau_{h} fakes",['JetFakes','JetFakesSublead'],ROOT.TColor.GetColor(192,232,100)),
-                backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(248,206,104)),
-                backgroundComp("H#rightarrow#tau#tau",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
-                ],
-    }
-    background_schemes['et'] = background_schemes['mt']
+    if args.prefit:
+        background_schemes = {
+            'et':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+            'mt':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+            'tt':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",['JetFakes','JetFakesSublead'],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+        }
+    else:
+        background_schemes = {
+            'et':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (Best Fit)",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+            'mt':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)), ###TODO changed this to TT once the template is named correctly!!!
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",["JetFakes"],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (Best Fit)",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+            'tt':[
+                    backgroundComp("Others",["ZL","VVT","TTT"],ROOT.TColor.GetColor(100,192,232)),
+                    backgroundComp("Jet#rightarrow#tau_{h} fakes",['JetFakes','JetFakesSublead'],ROOT.TColor.GetColor(160,193,114)),
+                    backgroundComp("Z#rightarrow#tau#tau",["ZTT"],ROOT.TColor.GetColor(255,169,14)),
+                    backgroundComp("H#rightarrow#tau#tau (Best Fit)",["TotalSig"],ROOT.TColor.GetColor(51,51,230)),
+                    ],
+        }
+
     
     stack_histos = []
     
@@ -321,13 +414,16 @@ if __name__ == "__main__":
         stack.Add(hists)
     
     signal_stack = ROOT.THStack("hs_sig","")
-    if sighist.GetEntries() > 0:
-        sighist.SetFillStyle(0)
-        sighist.SetLineColor(ROOT.kRed)
-        sighist.SetLineWidth(2)
-        if norm_bins: sighist.Scale(1.0,"width")
-        sighist.Scale(signal_scale)
-        signal_stack.Add(sighist)
+    if args.prefit:
+        if sighist.GetEntries() > 0:
+            sighist.SetFillStyle(0)
+            sighist.SetLineColor(ROOT.kRed)
+            sighist.SetLineWidth(2)
+            if norm_bins: sighist.Scale(1.0,"width")
+            sighist.Scale(signal_scale)
+            signal_stack.Add(sighist)
+
+
     if sighist_ps and sighist_ps.GetEntries() > 0:
         sighist_ps.SetFillStyle(0)
         sighist_ps.SetLineColor(ROOT.kBlue)
@@ -337,7 +433,11 @@ if __name__ == "__main__":
         signal_stack.Add(sighist_ps)
     
     axish = createAxisHists(2,bkghist,bkghist.GetXaxis().GetXmin(),bkghist.GetXaxis().GetXmax()-0.01)
-    axish[0].SetMaximum(bkghist.GetMaximum())
+    if not is_1d_bin:
+        axish[0].SetMaximum(3*bkghist.GetMaximum())
+    else:
+        axish[0].SetMaximum(bkghist.GetMaximum())
+    # axish[0].SetMaximum(bkghist.GetMaximum())
     axish[0].GetYaxis().SetTitle(y_title)
     axish[0].GetXaxis().SetLabelSize(0)
     axish[0].GetXaxis().SetTitleSize(0)
@@ -424,10 +524,8 @@ if __name__ == "__main__":
 
         # add extra axis for the phiCP angle
         scale = abs(float(ratio_range.split(',')[0])-float(ratio_range.split(',')[1]))/2
-
         y_axis = float(ratio_range.split(',')[0]) - 0.7*scale
-
-        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,-math.pi,math.pi,400,"NS")
+        extra_axis = ROOT.TGaxis(0,y_axis,Nxbins,y_axis,0,2*math.pi,400,"NS")
         extra_axis.SetLabelSize(0)
         #extra_axis.SetLabelFont(42)
         extra_axis.SetMaxDigits(2)
@@ -438,31 +536,39 @@ if __name__ == "__main__":
         extra_axis.SetTickSize(0.08)
         extra_axis.Draw()  
 
-        positions = [-math.pi, -math.pi/2, 0, math.pi/2, math.pi]
-        labels = ["-#pi", "-#pi/2", "0", "#pi/2", "#pi"]
+        positions = [0, math.pi/2, math.pi, 3*math.pi/2, 2*math.pi]
+        labels = ["0", "#pi/2", "#pi", "3#pi/2", "2#pi"]
         
         # Use TLatex to manually draw labels
         latex = ROOT.TLatex()
         latex.SetTextSize(0.035)
         latex.SetTextFont(42)
         latex.SetTextAlign(21)
-        
+
         # Map axis positions to pad x-coordinates
         for i, xval in enumerate(positions):
-            x_pixel = (xval + math.pi) / (2 * math.pi) * Nxbins  # from axis range to pixel
+            x_pixel = (xval) / (2 * math.pi) * Nxbins  # from axis range to pixel
             latex.DrawLatex(x_pixel, y_axis - 0.3 * scale, labels[i])  # adjust vertical offset as needed
 
+        latex.SetNDC()
+        latex.SetTextSize(0.04)
+
+        for ib, b in enumerate(ch_bins):
+            latex.DrawLatex((ib+0.83)/(len(ch_bins)+1), 0.82, "#font[42]{" + str(b) + "}")
     # draw the title, labels, and legend
     
     #CMS and lumi labels
-    plot.FixTopRange(pads[0], plot.GetPadYMax(pads[0]), extra_pad if extra_pad>0 else 0.15)
+    if not is_1d_bin:
+        plot.FixTopRange(pads[0], 3*bkghist.GetMaximum(), extra_pad if extra_pad>0 else 0.15)
+    else:
+        plot.FixTopRange(pads[0], plot.GetPadYMax(pads[0]), extra_pad if extra_pad>0 else 0.15)
     extra='Preliminary'
     if is_1d_bin:
         plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.17, -0.0, 2.0, '', 0.85)
-        plot.DrawTitle(pads[0], lumi, 3, textSize=0.6)
+        plot.DrawTitle(pads[0], ch_label + "   " + lumi, 3, textSize=0.6)
     else:
         plot.DrawCMSLogo(pads[0], 'CMS', extra, 0, 0.075, -0.0, 2.0, '', 0.6)
-        DrawTitleUnrolled(pads[0], lumi, 3, scale=0.7)
+        DrawTitleUnrolled(pads[0], ch_label + " "*50 + lumi, 3, scale=0.7)
     if is_1d_bin:
         legend = PositionedLegendUnrolled(0.25,0.5,7,0.)
     else:
@@ -478,10 +584,13 @@ if __name__ == "__main__":
         legend.AddEntry(hists,background_schemes[channel][legi]['leg_text'],"f")
     
     legend.AddEntry(bkghist,"Uncertainty","f")
-    legend.AddEntry(sighist,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})","l")
+    # comment to remove signal
+    if args.prefit:
+        legend.AddEntry(sighist,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=0^{#circ})","l")
     if sighist_ps:
         legend.AddEntry(sighist_ps,"H#rightarrow#tau#tau (#alpha^{H#tau#tau}=90^{#circ})","l")
     legend.Draw("same")
     
     canv.Print(os.path.join(args.dir, bin_name + '.pdf'))
+    canv.Print(os.path.join(args.dir, bin_name + '.png'))
     

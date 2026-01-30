@@ -378,12 +378,18 @@ else:
 
 # Implement fixes for negative bins and yields
 
-# Zero negetive bins
+# Zero negative bins
 print(green(">>> Zeroing negative bins"))
 cb.ForEachProc(NegativeBins)
 
 print(green(">>> Zeroing negative yields"))
 cb.ForEachProc(NegativeYields)
+
+# Get nominal histograms for all processes (needed when setting systematics)
+cb.ForEachProc(GetNominalHisto)
+# raise RuntimeError("Stopping here for debugging purposes")
+print(green(">>> Zeroing negative systematics"))
+cb.ForEachSyst(DetectNegativeSyst)
 
 # Write datacards
 print(green(">>> Writing datacards..."))
@@ -394,9 +400,13 @@ writer.SetVerbosity(1)
 writer.SetWildcardMasses([ ])
 writer.WriteCards("cmb", cb)
 # Cards per category
-writer.WriteCards("tt_mva_tau",   cb.cp().channel({"tt"}).bin_id({1}))
-writer.WriteCards("tt_mva_fake",   cb.cp().channel({"tt"}).bin_id({2}))
-writer.WriteCards("tt_bkg",   cb.cp().channel({"tt"}).bin_id({1,2}))
+writer.WriteCards("tt_bkg_tau",   cb.cp().channel({"tt"}).bin_id({1}))
+writer.WriteCards("tt_bkg_fake",   cb.cp().channel({"tt"}).bin_id({2}))
+writer.WriteCards("mt_bkg_tau",   cb.cp().channel({"mt"}).bin_id({1}))
+writer.WriteCards("mt_bkg_fake",   cb.cp().channel({"mt"}).bin_id({2}))
+writer.WriteCards("et_bkg_tau",   cb.cp().channel({"et"}).bin_id({1}))
+writer.WriteCards("et_bkg_fake",   cb.cp().channel({"et"}).bin_id({2}))
+writer.WriteCards("total_bkg",   cb.cp().bin_id({1,2}))
 writer.WriteCards("rhorho",   cb.cp().channel({"tt"}).bin_id({1,2,3}))
 writer.WriteCards("rhoa11pr", cb.cp().channel({"tt"}).bin_id({1,2,4}))
 writer.WriteCards("rhoa1",    cb.cp().channel({"tt"}).bin_id({1,2,5}))
@@ -415,7 +425,7 @@ writer.WriteCards("epi", cb.cp().channel({"et"}).bin_id({1,2,4}))
 writer.WriteCards("ea1", cb.cp().channel({"et"}).bin_id({1,2,5}))
 writer.WriteCards("ea11pr", cb.cp().channel({"et"}).bin_id({1,2,6}))
 
-# Cards per channel 
+# Cards per channel
 writer.WriteCards("tt", cb.cp().channel({"tt"}))
 writer.WriteCards("mt", cb.cp().channel({"mt"}))
 writer.WriteCards("et", cb.cp().channel({"et"}))

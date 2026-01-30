@@ -68,7 +68,7 @@ def AddSMRun3Systematics(cb):
 
     #For VV in principle can take NNLO numbers from here: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MATRIXCrossSectionsat13p6TeV
     #But since we mix together all VV + rare procs into this template, we take a conservative 5% uncertainty (same as for Run-2)
-    cb.cp().process(ttbar_procs).AddSyst(cb, 'cross_section_VV', 'lnN', ch.SystMap()(1.05))
+    cb.cp().process(vv_procs).AddSyst(cb, 'cross_section_VV', 'lnN', ch.SystMap()(1.05))
 
     # Higgs cross-section uncertainties from: https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHWG136TeVxsec_extrap
 
@@ -79,6 +79,8 @@ def AddSMRun3Systematics(cb):
     
     cb.cp().process(sig_procs['ZH']).AddSyst(cb, 'QCDscale_VH', 'lnN', ch.SystMap()((0.968,1.038)))
     
+    cb.cp().process(sig_procs['VBF']).AddSyst(cb, 'QCDscale_VH', 'lnN', ch.SystMap()((0.997,1.005)))
+
     # PDF uncertainties
     cb.cp().process(sig_procs['ggH']).AddSyst(cb, 'pdf_Higgs_gg', 'lnN', ch.SystMap()(1.032))
     
@@ -187,10 +189,10 @@ def AddSMRun3Systematics(cb):
         for trig in ['ditau','ditaujet']:
             for dm in ['0', '1', '2', '10']:
                 cb.cp().process(mc_procs).channel(['tt']).bin_id([1,2]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
-            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM{dm}PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM0PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM1PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM2PNet_{era}', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, f'CMS_HIG25012_trig_t_{trig}_VTight_DM10PNet_{era}', 'shape', ch.SystMap()(1.0))
 
         # jet leg uncertainties
         cb.cp().process(mc_procs).channel(['tt']).AddSyst(cb, f'CMS_HIG25012_trig_j_ditaujet_{era}', 'shape', ch.SystMap()(1.0))

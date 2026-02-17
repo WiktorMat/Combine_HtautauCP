@@ -351,6 +351,14 @@ def AddSMRun3Systematics(cb):
     # DM-migration uncertainties
     ###############################################
 
-    #TODO: migration uncertainties for migrations between reco-decay mode bins (not included for Run-2 but we could add)
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['mt','et']).bin_id([4]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM0", "shape", ch.SystMap()(1.0))    
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['mt','et']).bin_id([3]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM1", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['mt','et']).bin_id([6]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM2", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['mt','et']).bin_id([5]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM10", "shape", ch.SystMap()(1.0))
+
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([7,8,9,10]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM0", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([3,4,5,7]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM1", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([4,10,11]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM2", "shape", ch.SystMap()(1.0))
+    cb.cp().process(mc_procs).process(['ZL'],False).channel(['tt']).bin_id([5,6,9,11]).AddSyst(cb, "CMS_HIG25012_DM_migrations_GenDM10", "shape", ch.SystMap()(1.0))
 
     return cb

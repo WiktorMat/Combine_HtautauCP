@@ -1,0 +1,43 @@
+# eff is prefit efficiency for true case
+# first number (u1) is the deviation wrt prefit, second number (u2) is the error from the fit 
+#tot adds these linearly 
+
+# the sf_true is computed as 1+tot
+# the sf_false is computed as (1-sf_true*eff) / (1-eff)
+
+DM 0:
+
+  eff = 0.813
+  u1 = 0.023
+  u2 = 0.082
+  tot = 0.105
+  sf_true = 1.105
+  sf_fake = 0.544
+
+
+DM 1:
+
+  eff = 0.793
+  u1 = 0.011  
+  u2 = 0.037
+  tot = 0.048
+  sf_true = 1.048
+  sf_fake = 0.816
+
+DM 2:
+
+  eff = 0.696  
+  u1 = 0.050
+  u2 = 0.309
+  tot = 0.359
+  sf_true = 1.359
+  sf_false = 0.178
+
+DM 10:
+
+  eff = 0.907  
+  u1 = 0.010  
+  u2 = 0.013
+  tot = 0.023
+  sf_true = 1.023
+  sf_fake = 0.776

@@ -200,6 +200,14 @@ cb.cp().syst_name(["QCDscale_fac_qqH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_d(syst.value_d() * 1/0.9991435604512692)
 ))
 
+# For the DM migration uncertainties we modify them so that they don't change the yields, only the shapes
+# The yield changes are already accounted for by the usual tau ID uncertainties
+cb.cp().syst_name(["CMS_HIG25012_DM_migrations_GenDM0", "CMS_HIG25012_DM_migrations_GenDM1", "CMS_HIG25012_DM_migrations_GenDM2", "CMS_HIG25012_DM_migrations_GenDM10"]).ForEachSyst(lambda syst: (
+        syst.set_value_u(1.0),
+        syst.set_value_d(1.0)
+))
+
+
 ch.SetStandardBinNames(cb)
 
 def MatchingProcess(first, second):

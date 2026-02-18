@@ -141,7 +141,13 @@ def AddSMRun3Systematics(cb):
     # e->tau fakes (ZL only in et)
     for era in eras:
         for eta in ['0p0', '1p5']:
-            cb.cp().process(mc_procs).process(['ZL']).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}', 'shape', ch.SystMap()(1.0))
+            for dm in ['0', '1', '2', '10']:
+                cb.cp().process(mc_procs).process(['ZL']).bin_id([1,2]).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}_DM{dm}PNet', 'shape', ch.SystMap()(1.0))
+
+            cb.cp().process(mc_procs).process(['ZL']).bin_id([4]).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}_DM0PNet', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL']).bin_id([3]).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}_DM1PNet', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL']).bin_id([6]).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}_DM2PNet', 'shape', ch.SystMap()(1.0))
+            cb.cp().process(mc_procs).process(['ZL']).bin_id([5]).channel(['et']).AddSyst(cb, f'CMS_fake_t_DeepTau2018v2p5_VSe_{era}_eta_{eta}_DM10PNet', 'shape', ch.SystMap()(1.0))
             # TODO: increase/decouple uncertainties
 
     # Genuine Tau ID

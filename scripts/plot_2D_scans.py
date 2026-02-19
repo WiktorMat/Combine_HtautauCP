@@ -14,6 +14,7 @@ from scipy import interpolate
 from scipy.interpolate import griddata
 import mplhep as hep
 import argparse
+import os
 
 
 hep.style.use("CMS")
@@ -64,7 +65,7 @@ def main(args):
 
         # add the equivalent minimum NLL
         bestfit_kappaH = [bestfit['kappaH'][0], -bestfit['kappaH'][0]]
-        bestfit_kappaA = [bestfit['kappaA'][0], bestfit['kappaA'][0]]
+        bestfit_kappaA = [bestfit['kappaA'][0], -bestfit['kappaA'][0]]
         print(f"Best fit at kappaH={bestfit_kappaH}, kappaA={bestfit_kappaA}")
 
 
@@ -139,10 +140,19 @@ def main(args):
 
     if args.muvsmu:
 
+        # df = df.Filter('muggH >= 0 && muV >= 0')
+
         arrays = df.AsNumpy(["muggH", "muV", "nll"])
+
+
+        # print(arrays)
         muggH = arrays["muggH"]
         muV = arrays["muV"]
+        # nll = arrays["nll"]-arrays["nll"].min() # shift to minimum 0
         nll = arrays["nll"]
+
+        # bestfit['muggH'] = arrays["muggH"][np.argmin(nll)]
+        # bestfit['muV'] = arrays["muV"][np.argmin(nll)]
 
         # interpolate NLL onto a fine grid
         x_grid = np.linspace(muV.min(), muV.max(), 3000)
@@ -180,7 +190,8 @@ def main(args):
         # ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
         # ax.yaxis.set_major_locator(ticker.MultipleLocator(1, offset=0.0))
         hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='62.4', com='13.6', fontsize=18)
-        plt.savefig("muggHVsmuV.pdf")
+        # hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='200', com='13 and 13.6', fontsize=18)
+        plt.savefig(os.path.join('/'.join(args.file.split('/')[:-1]), "muggHVsmuV_EXPECTED.pdf"))
 
 
 if __name__ == "__main__":

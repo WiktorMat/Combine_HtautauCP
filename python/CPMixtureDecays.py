@@ -34,8 +34,8 @@ class CPMixtureDecays(PhysicsModel):
             self.modelBuilder.doVar('muggH[1]')
           else:
             self.modelBuilder.doVar('mutautau[1]')
-            self.modelBuilder.doVar('muV[1,0,10]')
-            self.modelBuilder.doVar('muggH[1,0,10]')
+            self.modelBuilder.doVar('muV[1,-5,10]')
+            self.modelBuilder.doVar('muggH[1,-5,10]')
 
           self.modelBuilder.doSet('POI', ','.join(poiNames))
 

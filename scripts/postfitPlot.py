@@ -230,9 +230,9 @@ if __name__ == "__main__":
     elif '_tt_' in bin_name:
         ch_bins = ['(BDT 0.33-0.7)', '(BDT 0.7-0.8)', '(BDT 0.8-0.9)', '(BDT 0.9-1.0)']
     elif '_mt_' in bin_name:
-        ch_bins = ['(BDT 0.33-0.57)', '(BDT 0.57-0.68)', '(BDT 0.68-0.77)', '(BDT 0.77-0.85)', '(BDT 0.85-1.0)']
+        ch_bins = ['(BDT 0.33-0.6)', '(BDT 0.6-0.7)', '(BDT 0.7-0.8)', '(BDT 0.8-0.9)', '(BDT 0.9-1.0)']
     elif '_et_' in bin_name:
-        ch_bins = ['(BDT 0.33-0.57)', '(BDT 0.57-0.71)', '(BDT 0.71-1.0)']
+        ch_bins = ['(BDT 0.33-0.6)', '(BDT 0.6-0.8)', '(BDT 0.8-1.0)']
 
 
     input_file = ROOT.TFile(args.input_file)

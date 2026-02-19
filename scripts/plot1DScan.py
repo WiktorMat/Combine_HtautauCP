@@ -344,6 +344,8 @@ elif 'mua1' in args.output:
     ch_label = '#mu a_{1}^{3pr}'
 elif 'mupi' in args.output:
     ch_label = '#mu #pi'
+else:
+    ch_label = ''
 
 
 
@@ -525,7 +527,7 @@ if args.json is not None:
 plot.DrawCMSLogo(pads[0], args.logo, args.logo_sub, 10, 0.035, 0.035, 1.2, cmsTextSize=1.0)
 
 if args.combination:
-    if not args.no_title: plot.DrawTitle(pads[0], '200 fb^{-1} (13/13.6 TeV)', 3) # combination
+    if not args.no_title: plot.DrawTitle(pads[0], '200 fb^{-1} (13 and 13.6 TeV)', 3) # combination
 else:
     if not args.no_title: plot.DrawTitle(pads[0], '62.4 fb^{-1} (13.6 TeV)', 3) # early Run 3
 # if not args.no_title: plot.DrawTitle(pads[0], '58 fb^{-1} (13 TeV)', 3) # 16+17+18

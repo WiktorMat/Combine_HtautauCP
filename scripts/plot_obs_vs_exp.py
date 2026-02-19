@@ -48,8 +48,43 @@ elif 'mt' in channel:
     ch_label = r'$\mu\tau_{h}$'
 elif 'et' in channel:
     ch_label = r'$e\tau_{h}$'
+elif 'a1a1' in channel:
+    ch_label = r'$a_{1}^{3pr}a_{1}^{3pr}$'
+elif 'a11pra1' in channel:
+    ch_label = r'$a_{1}^{1pr}a_{1}^{3pr}$'
+elif 'pia11pr' in channel:
+    ch_label = r'$\pi a_{1}^{1pr}$'
+elif 'pirho' in channel:
+    ch_label = r'$\pi \rho$'
+elif 'rhoa11pr' in channel:
+    ch_label = r'$\rho a_{1}^{1pr}/a_{1}^{1pr}a_{1}^{1pr}$'
+elif 'pia1' in channel:
+    ch_label = r'$\pi a_{1}^{3pr}$'
+elif 'pipi' in channel:
+    ch_label = r'$\pi \pi$'
+elif 'rhorho' in channel:
+    ch_label = r'$\rho \rho$'
+elif 'rhoa1' in channel:
+    ch_label = r'$\rho a_{1}^{3pr}$'
+elif 'ea11pr' in channel:
+    ch_label = r'$e a_{1}^{1pr}$'
+elif 'erho' in channel:
+    ch_label = r'$e \rho$'
+elif 'ea1' in channel:
+    ch_label = r'$e a_{1}^{3pr}$'
+elif 'epi' in channel:
+    ch_label = r'$e \pi$'
+elif 'mua11pr' in channel:
+    ch_label = r'$\mu a_{1}^{1pr}$'
+elif 'murho' in channel:
+    ch_label = r'$\mu \rho$'
+elif 'mua1' in channel:
+    ch_label = r'$\mu a_{1}^{3pr}$'
+elif 'mupi' in channel:
+    ch_label = r'$\mu \pi$'
 else:
-    ch_label = '' # don't need to setup the sub channels
+    ch_label = r''
+
 
 if args.expected is not None:
     file_exp = ROOT.TFile.Open(os.path.join(args.directory, args.expected))

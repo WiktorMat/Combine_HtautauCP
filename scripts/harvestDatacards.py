@@ -62,6 +62,10 @@ else:
     sig_procs['ggH'] = ['ggH_sm_prod_sm_htt','ggH_ps_prod_sm_htt','ggH_mm_prod_sm_htt']
     sig_procs['qqH'] = ['qqH_sm_htt','qqH_ps_htt','qqH_mm_htt','WH_sm_htt','WH_ps_htt','WH_mm_htt','ZH_sm_htt','ZH_ps_htt','ZH_mm_htt']
 
+    # define all MC procs
+    mc_procs = ['ZTT','ZL','TTT','VVT']
+    for p in sig_procs.values(): mc_procs+=p
+
     # define categories which can depend on the channel
     cats = {}
     cats['tt'] = [
@@ -198,6 +202,34 @@ cb.cp().syst_name(["QCDscale_ren_qqH_ACCEPT"]).ForEachSyst(lambda syst: (
 cb.cp().syst_name(["QCDscale_fac_qqH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/1.0057565776872635),
       syst.set_value_d(syst.value_d() * 1/0.9991435604512692)
+))
+
+# rename IP sig uncertainties to decorrelate electrons and muons
+for tautype in ['prompt', 'tauDecay']:
+    for eta in ['Lt1p0', '1p0to1p6', 'Gt1p6']:
+        cb.cp().process(mc_procs).channel(['mt']).RenameSystematic(cb,f'CMS_HIG25012_eff_IPSigCut_{tautype}_eta_{eta}', f'CMS_HIG25012_eff_mu_IPSigCut_{tautype}_eta_{eta}')
+        cb.cp().process(mc_procs).channel(['et']).RenameSystematic(cb,f'CMS_HIG25012_eff_IPSigCut_{tautype}_eta_{eta}', f'CMS_HIG25012_eff_e_IPSigCut_{tautype}_eta_{eta}')
+
+# uncorrelate some FF uncertainties
+cb.cp().process(['JetFakes']).channel(['tt']).RenameSystematic(cb,f'CMS_HIG25012_fake_t_sub_syst', f'CMS_HIG25012_fake_t_tt_sub_syst')
+cb.cp().process(['JetFakes']).channel(['mt']).RenameSystematic(cb,f'CMS_HIG25012_fake_t_sub_syst', f'CMS_HIG25012_fake_t_mt_sub_syst')
+cb.cp().process(['JetFakes']).channel(['et']).RenameSystematic(cb,f'CMS_HIG25012_fake_t_sub_syst', f'CMS_HIG25012_fake_t_et_sub_syst')
+
+for chn in ['mt','et']:
+    # uncorrelate all statistical components
+    for ff_type in ['wj','qcd','mc_top']:
+        for njets in [0,1,2]:
+            cb.cp().process(['JetFakes']).channel([chn]).bin_id([1,2,4]).RenameSystematic(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm0_{njets}j", f"CMS_HIG25012_fake_t_{chn}_{ff_type}_stat_dm0_{njets}j")
+            cb.cp().process(['JetFakes']).channel([chn]).bin_id([1,2,3]).RenameSystematic(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm1_{njets}j", f"CMS_HIG25012_fake_t_{chn}_{ff_type}_stat_dm1_{njets}j")
+            cb.cp().process(['JetFakes']).channel([chn]).bin_id([1,2,6]).RenameSystematic(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm2_{njets}j", f"CMS_HIG25012_fake_t_{chn}_{ff_type}_stat_dm2_{njets}j")
+            cb.cp().process(['JetFakes']).channel([chn]).bin_id([1,2,5]).RenameSystematic(cb, f"CMS_HIG25012_fake_t_{ff_type}_stat_dm10_{njets}j", f"CMS_HIG25012_fake_t_{chn}_{ff_type}_stat_dm10_{njets}j")
+    # uncorrelate systematic component of et and mt for qcd only
+    cb.cp().process(['JetFakes']).channel([chn]).RenameSystematic(cb, f"CMS_HIG25012_fake_t_qcd_syst", f"CMS_HIG25012_fake_t_{chn}_qcd_syst")
+
+# scale DM migration uncertainties to factor out changes due to yield
+cb.cp().syst_name(["CMS_HIG25012_DM_migrations_GenDM0", "CMS_HIG25012_DM_migrations_GenDM1", "CMS_HIG25012_DM_migrations_GenDM2", "CMS_HIG25012_DM_migrations_GenDM10"]).ForEachSyst(lambda syst: (
+        syst.set_value_u(1.0),
+        syst.set_value_d(1.0)
 ))
 
 ch.SetStandardBinNames(cb)

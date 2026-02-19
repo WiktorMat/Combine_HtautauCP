@@ -283,3 +283,49 @@ hadd -v 1 -f higgsCombine.muVsalpha.MultiDimFit.mH125 higgsCombine.muVsalpha.POI
 ```
 python3 scripts/plot_2D_scans.py --file run2run3_2Dkappas/higgsCombine.kappas.MultiDimFit.mH125.root --kappas
 ```
+
+### Run DM migration fits
+
+
+Produce the txt datacards:
+
+```
+python3 scripts/harvestDatacardsDMMigrations.py
+```
+
+make the workspaces
+
+```
+combineTool.py -m 125 -M T2W -i outputs/DMMigrations_incTES_Feb17/cmb -o ws.root --parallel 8
+```
+
+perform the fit:
+
+```
+combineTool.py -m 125 -M MultiDimFit -d outputs/DMMigrations_incTES_Feb17/cmb/ws.root -n .BestFit --algo none --saveFitResult --there --freezeParameters r
+```
+
+run prefit shapes:
+
+```
+python3 python/PostFitShapesCombEras.py -w outputs/DMMigrations_incTES_Feb17/cmb/ws.root -d outputs/DMMigrations_incTES_Feb17/cmb/combined.txt.cmb  -o shapes_prefit.root --dm_migration_uncerts > out_prefit.out
+```
+
+run postfit shapes:
+
+```
+python3 python/PostFitShapesCombEras.py -w outputs/DMMigrations_incTES_Feb17/cmb/ws.root -d outputs/DMMigrations_incTES_Feb17/cmb/combined.txt.cmb --postfit -f outputs/DMMigrations_incTES_Feb17/cmb/multidimfit.BestFit.root:fit_mdf -o shapes_postfit_incTES.root --dm_migration_uncerts > out_postfit_incTES.out
+```
+
+The migrtion uncertainties are taken as the linear fun of the fit uncertainty and the difference between prefit and postfit efficiencies
+
+Can also make the pre and post-fit plots using
+
+```
+mkdir -p dm_migrations/postfit
+mkdir -p dm_migrations/prefit
+
+for b in 1 2 3 4; do python3 scripts/postfitPlotDMMigrations.py -b htt_mt_${b}_13p6TeV --norm_bins --dir dm_migrations/postfit; done
+
+for b in 1 2 3 4; do python3 scripts/postfitPlotDMMigrations.py -b htt_mt_${b}_13p6TeV --norm_bins --dir dm_migrations/prefit -i shapes_prefit.root; done
+```

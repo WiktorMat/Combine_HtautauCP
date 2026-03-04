@@ -133,20 +133,33 @@ if args.observed is not None:
 fig, ax = plt.subplots(figsize=(7.5,6))
 # add CLs
 ax.axhline(levels[0], color='grey', linestyle='-', linewidth=0.75)
+ax.text(-70, levels[0]+0.1, '68.3%', color='grey', fontsize=14, verticalalignment='bottom', horizontalalignment='right')
 ax.axhline(levels[1], color='grey', linestyle='-', linewidth=0.75)
+ax.text(-70, levels[1]+0.1, '95.5%', color='grey', fontsize=14,  verticalalignment='bottom', horizontalalignment='right')
+if args.combination:
+    ax.axhline(levels[2], color='grey', linestyle='-', linewidth=0.75)
+    ax.text(-70, levels[2]+0.1, '99.7%', color='grey', fontsize=14, verticalalignment='bottom', horizontalalignment='right')
 if args.expected is not None:
     bestfit_exp = alpha_exp[np.argmin(nll_exp)]
     print(f"Best fit expected alpha: {bestfit_exp}")
     # intersections and 1 and 2 sigma
     if int_1sig_exp_exists:
-        ax.plot([int_1sig_exp[0], int_1sig_exp[0]], [0, levels[0]], color='grey', linestyle='--', linewidth=0.75)
-        ax.plot([int_1sig_exp[1], int_1sig_exp[1]], [0, levels[0]], color='grey', linestyle='--', linewidth=0.75)
-        label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {round(np.abs(bestfit_exp),0):.0f}^{{+{round(np.abs(bestfit_exp-int_1sig_exp[1]),0):.0f}}}_{{-{round(np.abs(bestfit_exp-int_1sig_exp[0]),0):.0f}}}$"
+        # uncomment if want to add vertical lines at 1 sigma intersections
+        # ax.plot([int_1sig_exp[0], int_1sig_exp[0]], [0, levels[0]], color='grey', linestyle='--', linewidth=0.75)
+        # ax.plot([int_1sig_exp[1], int_1sig_exp[1]], [0, levels[0]], color='grey', linestyle='--', linewidth=0.75)
+        error_up_exp = round(np.abs(bestfit_exp-int_1sig_exp[1]),0)
+        error_down_exp = round(np.abs(bestfit_exp-int_1sig_exp[0]),0)
+        if error_up_exp == error_down_exp:
+            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {0}\pm{error_up_exp:.0f} ^\circ $ (68.3% CL)"
+        else:
+            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {0}^{{+{error_up_exp:.0f} \circ}}_{{-{error_down_exp:.0f}}}$ (68.3% CL)"
+
     else:
-        label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {round(np.abs(bestfit_exp),0):.0f}$"
-    if int_2sig_exp_exists:
-        ax.plot([int_2sig_exp[0], int_2sig_exp[0]], [0, levels[1]], color='grey', linestyle='--', linewidth=0.75)
-        ax.plot([int_2sig_exp[1], int_2sig_exp[1]], [0, levels[1]], color='grey', linestyle='--', linewidth=0.75)
+        label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {round(np.abs(bestfit_exp),0):.0f} ^\circ$ (68.3% CL)"
+    # if int_2sig_exp_exists:
+    #     # uncomment if want to add vertical lines at 2 sigma intersections
+    #     ax.plot([int_2sig_exp[0], int_2sig_exp[0]], [0, levels[1]], color='grey', linestyle='--', linewidth=0.75)
+    #     ax.plot([int_2sig_exp[1], int_2sig_exp[1]], [0, levels[1]], color='grey', linestyle='--', linewidth=0.75)
 
 
 
@@ -157,14 +170,21 @@ if args.observed is not None:
 
     # intersections and 1 and 2 sigma
     if int_1sig_obs_exists:
-        ax.plot([int_1sig_obs[0], int_1sig_obs[0]], [0, levels[0]], color='grey', linestyle='-', linewidth=0.75)
-        ax.plot([int_1sig_obs[1], int_1sig_obs[1]], [0, levels[0]], color='grey', linestyle='-', linewidth=0.75)
-        label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}^{{+{round(np.abs(bestfit_obs-int_1sig_obs[1]),0):.0f}}}_{{-{round(np.abs(bestfit_obs-int_1sig_obs[0]),0):.0f}}}$"
+        # uncomment if want to add vertical lines at 1 sigma intersections
+        # ax.plot([int_1sig_obs[0], int_1sig_obs[0]], [0, levels[0]], color='grey', linestyle='-', linewidth=0.75)
+        # ax.plot([int_1sig_obs[1], int_1sig_obs[1]], [0, levels[0]], color='grey', linestyle='-', linewidth=0.75)
+        error_up_obs = round(np.abs(bestfit_obs-int_1sig_obs[1]),0)
+        error_down_obs = round(np.abs(bestfit_obs-int_1sig_obs[0]),0)
+        if error_up_obs == error_down_obs:
+            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}\pm{error_up_obs:.0f} ^\circ $ (68.3% CL)"
+        else:
+            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}^{{+{error_up_obs:.0f} \circ}}_{{-{error_down_obs:.0f}}}$ (68.3% CL)"
     else:
-        label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}$"
-    if int_2sig_obs_exists:
-        ax.plot([int_2sig_obs[0], int_2sig_obs[0]], [0, levels[1]], color='grey', linestyle='-', linewidth=0.75)
-        ax.plot([int_2sig_obs[1], int_2sig_obs[1]], [0, levels[1]], color='grey', linestyle='-', linewidth=0.75)
+        label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}^{{+90}}_{{-90}} ^\circ $ (68.3% CL)"
+    # if int_2sig_obs_exists:
+    #     # uncomment if want to add vertical lines at 1 sigma intersections
+    #     ax.plot([int_2sig_obs[0], int_2sig_obs[0]], [0, levels[1]], color='grey', linestyle='-', linewidth=0.75)
+    #     ax.plot([int_2sig_obs[1], int_2sig_obs[1]], [0, levels[1]], color='grey', linestyle='-', linewidth=0.75)
 
 
 if args.observed is not None:
@@ -179,13 +199,13 @@ elif args.observed is None:
 else:
     ax.set_ylim(0, max([max(nll_obs), max(nll_exp)])*1.4)
 
-ax.set_xlabel(r'$\alpha^{H\tau\tau}$')
+ax.set_xlabel(r'$\alpha^{H\tau\tau}$ (degrees)')
 ax.set_ylabel(r'-2$\Delta$lnL')
 
 ax.set_xlim(-90, 90)
 fig.tight_layout(pad=1.2)
 plt.legend(frameon=True, loc='upper right')
-plt.title(ch_label, fontsize=18)
+# plt.title(ch_label, fontsize=18)
 if args.combination:
     hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='200', com='13 and 13.6', fontsize=18)
 else:
@@ -195,4 +215,4 @@ if args.expected is None:
 elif args.observed is None:
     plt.savefig(os.path.join(args.directory, args.expected.replace('.root','_formatted.pdf')))
 else:
-    plt.savefig(os.path.join(args.directory, f'alpha_OBS_vs_EXP.pdf'))
+    plt.savefig(os.path.join(args.directory, f'alpha_OBS_vs_EXP.pdf'), bbox_inches='tight')

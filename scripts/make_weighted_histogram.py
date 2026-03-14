@@ -544,6 +544,9 @@ def propoganda_plot_phicp(sm,ps,mm, bkg,data,plot_name,fout,extra_label='Prelimi
 
     legend.AddEntry(data,'Data #minus Bkg.',"lep")
     legend.AddEntry(bkg,'Bkg. unc.',"f")
+    # add empty entry for spacing
+    dummy = ROOT.TH1F("", "", 1,0,1)
+    legend.AddEntry(dummy,"","")
     legend.AddEntry(sm,'#alpha^{H#tau#tau} = 0#lower[0.9]{^{#circ}}',"l")
     legend.AddEntry(ps,'#alpha^{H#tau#tau} = 90#lower[0.9]{^{#circ}}',"l")
     if plot_mm:

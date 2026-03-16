@@ -542,7 +542,7 @@ def propoganda_plot_phicp(sm,ps,mm, bkg,data,plot_name,fout,extra_label='Prelimi
     legend.SetFillColor(0)
     legend.SetFillStyle(0)
 
-    legend.AddEntry(data,'Data #minus Bkg.',"lep")
+    legend.AddEntry(data,'Data #minus bkg.',"lep")
     legend.AddEntry(bkg,'Bkg. unc.',"f")
     # add empty entry for spacing
     dummy = ROOT.TH1F("", "", 1,0,1)
@@ -578,11 +578,11 @@ propoganda_plot_phicp(sig_sm_worst, sig_ps_worst, sig_mm_worst, bkg_worst, data_
 if args.extra_plots:
     run3_cats = [cat for cat in best_cats if '13p6TeV' in cat ]
     bkg_run3, sig_sm_run3, sig_ps_run3, sig_mm_run3, data_run3 = CombineCats(run3_cats, histograms)
-    propoganda_plot_phicp(sig_sm_run3, sig_ps_run3, sig_mm_run3, bkg_run3, data_run3, f'{output_dir}/weighted_phiCP_run3_only', fout, extra_label='Preliminary',plot_mm=True,lum='62.4 fb^{-1} (13.6TeV)')
+    propoganda_plot_phicp(sig_sm_run3, sig_ps_run3, sig_mm_run3, bkg_run3, data_run3, f'{output_dir}/weighted_phiCP_run3_only', fout, extra_label='Preliminary',plot_mm=True,lum='62.4 fb^{-1} (13.6 TeV)')
 
     run2_cats = [cat for cat in best_cats if '13TeV' in cat ]
     bkg_run2, sig_sm_run2, sig_ps_run2, sig_mm_run2, data_run2 = CombineCats(run2_cats, histograms)
-    propoganda_plot_phicp(sig_sm_run2, sig_ps_run2, sig_mm_run2, bkg_run2, data_run2, f'{output_dir}/weighted_phiCP_run2_only', fout, extra_label='Preliminary',plot_mm=True,lum='137 fb^{-1} (13TeV)')
+    propoganda_plot_phicp(sig_sm_run2, sig_ps_run2, sig_mm_run2, bkg_run2, data_run2, f'{output_dir}/weighted_phiCP_run2_only', fout, extra_label='Preliminary',plot_mm=True,lum='137 fb^{-1} (13 TeV)')
 
 
     # make individual plots for each category including mm as well

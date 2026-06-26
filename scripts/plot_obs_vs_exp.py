@@ -150,9 +150,9 @@ if args.expected is not None:
         error_up_exp = round(np.abs(bestfit_exp-int_1sig_exp[1]),0)
         error_down_exp = round(np.abs(bestfit_exp-int_1sig_exp[0]),0)
         if error_up_exp == error_down_exp:
-            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {0}\pm{error_up_exp:.0f} ^\circ $ (68.3% CL)"
+            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = ({0}\pm{error_up_exp:.0f}) ^\circ $ (68.3% CL)"
         else:
-            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {0}^{{+{error_up_exp:.0f} \circ}}_{{-{error_down_exp:.0f}}}$ (68.3% CL)"
+            label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = ({0}^{{+{error_up_exp:.0f}}}_{{-{error_down_exp:.0f}}})^\circ$ (68.3% CL)"
 
     else:
         label_string_exp = rf"Expected: $\alpha^{{H\tau\tau}} = {round(np.abs(bestfit_exp),0):.0f} ^\circ$ (68.3% CL)"
@@ -176,9 +176,9 @@ if args.observed is not None:
         error_up_obs = round(np.abs(bestfit_obs-int_1sig_obs[1]),0)
         error_down_obs = round(np.abs(bestfit_obs-int_1sig_obs[0]),0)
         if error_up_obs == error_down_obs:
-            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}\pm{error_up_obs:.0f} ^\circ $ (68.3% CL)"
+            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = ({round(bestfit_obs,0):.0f}\pm{error_up_obs:.0f}) ^\circ $ (68.3% CL)"
         else:
-            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}^{{+{error_up_obs:.0f} \circ}}_{{-{error_down_obs:.0f}}}$ (68.3% CL)"
+            label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = ({round(bestfit_obs,0):.0f}^{{+{error_up_obs:.0f}}}_{{-{error_down_obs:.0f}}})^\circ$ (68.3% CL)"
     else:
         label_string_obs = rf"Observed: $\alpha^{{H\tau\tau}} = {round(bestfit_obs,0):.0f}^{{+90}}_{{-90}} ^\circ $ (68.3% CL)"
     # if int_2sig_obs_exists:
@@ -204,12 +204,12 @@ ax.set_ylabel(r'-2$\Delta$lnL')
 
 ax.set_xlim(-90, 90)
 fig.tight_layout(pad=1.2)
-plt.legend(frameon=True, loc='upper right')
+plt.legend(frameon=False, loc='upper right')
 # plt.title(ch_label, fontsize=18)
 if args.combination:
-    hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='200', com='13 and 13.6', fontsize=18)
+    hep.cms.label(ax=ax, label="", data=True, lumi='200', com='13 and 13.6', fontsize=18)
 else:
-    hep.cms.label(ax=ax, label="Preliminary", data=True, lumi='62.4', com='13.6', fontsize=18)
+    hep.cms.label(ax=ax, label="", data=True, lumi='62.4', com='13.6', fontsize=18)
 if args.expected is None:
     plt.savefig(os.path.join(args.directory, args.observed.replace('.root','_formatted.pdf')))
 elif args.observed is None:

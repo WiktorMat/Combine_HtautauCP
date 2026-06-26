@@ -331,6 +331,31 @@ for bin in bins_grouped:
       err_total = (shapes_tot[0].GetBinError(i)/float(samples))**.5
       shapes_tot[0].SetBinError(i,err_total)
 
+
+  for x in [('SM', 0.), ('PS', 90.), ('MM', 45.)]:
+    cmb.UpdateParameters(res_backup)
+    # now we get the signal template for the sm, ps, and mm with rate params fixed to 1
+    par = cmb.GetParameter('muV')
+    if par: par.set_val(1.)
+    par = cmb.GetParameter('muggH')
+    if par: par.set_val(1.)
+    par_alpha = cmb.GetParameter('alpha')
+    if par_alpha: par_alpha.set_val(x[1])
+
+    alphaX_sig_tot = []
+    for b in bins:
+      shape = cmb_bin.cp().bin([b]).signals().GetShape()
+      if args.datacard: shape = RestoreBinning(shape, ref)
+      shape = shape.Rebin(len(common_bins)-1, '', common_bins)
+      shape = ZeroErrors(shape) # zero errors to avoid confusion about what they represent
+      alphaX_sig_tot.append(shape.Clone())
+
+    for s in alphaX_sig_tot[1:]: alphaX_sig_tot[0].Add(s)
+    fout.cd(dirname)
+    alphaX_sig_tot[0].SetName(f'TotalSig_{x[0]}')
+    alphaX_sig_tot[0].Write(f'TotalSig_{x[0]}')
+    cmb.UpdateParameters(res_backup)
+
   # now save our total background template with correct uncertainties
   fout.cd(dirname)
   shapes_bkg[0].SetName('TotalBkg')
@@ -338,5 +363,17 @@ for bin in bins_grouped:
   shapes_tot[0].SetName('TotalProcs')
   shapes_tot[0].Write('TotalProcs')
 
+
+
+#  # get origional muV, muggH, and alpha values
+#  muV_orig = cmb_bin.cp().GetParameter('muV')
+#  muggH_orig = cmb_bin.cp().GetParameter('muggH')
+#  alpha_orig = cmb_bin.cp().GetParameter('alpha')#
+#
+#
+ #         par = cmb.GetParameter(parts[0])
+ #       if par:
+ #         par.set_val(float(parts[1]))
+ #         par.set_frozen(True)
 fout.Close()
 

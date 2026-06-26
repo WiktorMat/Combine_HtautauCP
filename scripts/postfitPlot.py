@@ -113,6 +113,32 @@ def garwood_interval(n, cl=0.683):
     high = 0.5 * chi2.ppf(1 - alpha / 2, 2 * (n + 1))
     return low, high
 
+def apply_phase_shift_unrolled(hist, nxbins, phase_shift):
+    if phase_shift == 0:
+        return hist
+    half = nxbins // 2
+    n_total = hist.GetNbinsX()
+    n_blocks = n_total // nxbins
+    histout = hist.Clone()
+    # apply phase shift of pi
+    for block in range(n_blocks):
+        offset = block * nxbins
+        for b in range(1, nxbins + 1):
+            new_b = (b - 1 + half) % nxbins + 1
+            histout.SetBinContent(offset + new_b, hist.GetBinContent(offset + b))
+            histout.SetBinError(offset + new_b, hist.GetBinError(offset + b))
+    # mirror
+    if phase_shift < 0:
+        for block in range(n_blocks):
+            offset = block * nxbins
+            for i in range(1, nxbins // 2 + 1):
+                j = nxbins - i + 1
+                ci, ei = histout.GetBinContent(offset + i), histout.GetBinError(offset + i)
+                cj, ej = histout.GetBinContent(offset + j), histout.GetBinError(offset + j)
+                histout.SetBinContent(offset + i, cj); histout.SetBinError(offset + i, ej)
+                histout.SetBinContent(offset + j, ci); histout.SetBinError(offset + j, ei)
+    return histout
+
 def MakeRatioGraph(num,denom):
     # make a ratio graph from a TGraphAsymmErrors and a TH1
     ratio = num.Clone()
@@ -305,6 +331,20 @@ if __name__ == "__main__":
         ave_sig = sighist.Clone()
     
     datahist = getHistogram(input_file,"data_obs",bin_name)[0]
+
+    # NOTE: Phase change only needed for tuples used at unblinding, now fixed in HiggsDNA
+    if 'tt_6' in bin_name:
+        _nxbins = nxbins_map.get(bin_name, 4)
+        bkghist     = apply_phase_shift_unrolled(bkghist,     _nxbins, -1)
+        bkgonlyhist = apply_phase_shift_unrolled(bkgonlyhist, _nxbins, -1)
+        sighist     = apply_phase_shift_unrolled(sighist,     _nxbins, -1)
+        sighist_SM  = apply_phase_shift_unrolled(sighist_SM,  _nxbins, -1)
+        sighist_PS  = apply_phase_shift_unrolled(sighist_PS,  _nxbins, -1)
+        ave_sig     = apply_phase_shift_unrolled(ave_sig,     _nxbins, -1)
+        if sighist_ps is not None:
+            sighist_ps = apply_phase_shift_unrolled(sighist_ps, _nxbins, -1)
+        datahist    = apply_phase_shift_unrolled(datahist,    _nxbins, -1)
+
     datahist.SetMarkerStyle(20)
     if is_1d_bin:
         datahist.SetMarkerSize(1.5)
@@ -423,10 +463,14 @@ if __name__ == "__main__":
                     isHist = True
                     h.Add(getHistogram(input_file,k, bin_name)[0])
     
+        # NOTE: Phase change only needed for tuples used at unblinding, now fixed in HiggsDNA
+        if 'tt_6' in bin_name and isHist:
+            h = apply_phase_shift_unrolled(h, nxbins_map.get(bin_name, 4), -1)
+
         h.SetFillColor(t['colour'])
         h.SetLineColor(ROOT.kBlack)
         h.SetMarkerSize(0)
-        
+
         if norm_bins: h.Scale(1.0,"width")
         if isHist:
             stack_histos.append(h)

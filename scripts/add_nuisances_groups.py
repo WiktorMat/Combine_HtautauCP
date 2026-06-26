@@ -18,9 +18,9 @@ def split_systematics(s):
         systematic_groups['all'].append(name)
         if "bbb" in name:
             systematic_groups['bbb'].append(name)
-        elif ("CMS_" in name or 'lumi_' in name or name.startswith("ff_") or name.startswith('SV_eff')) and "Z_pt" not in name and 'dy_pt' not in name:
+        elif ("CMS_" in name or 'lumi_' in name or name.startswith("ff_") or name.startswith('SV_eff') or name.startswith('dy_pt')):
             systematic_groups['systematic'].append(name)
-        elif "QCDscale" in name or "pdf_" in name or "BR_htt" in name or 'top_pt' in name or  "Z_pt" in name or 'dy_pt' in name or 'cross_section' in name or 'ps_isr' in name or 'ps_fsr' in name:
+        elif "QCDscale" in name or "pdf_" in name or "BR_htt" in name or 'top_pt' in name or 'cross_section' in name or 'ps_isr' in name or 'ps_fsr' in name:
             systematic_groups['theory'].append(name)
         else:
             systematic_groups['other'].append(name)

@@ -16,12 +16,6 @@ categories:
 
 backgrounds:
   mt:
-    - QCD
-    - dibosons
-    - tt
-    - W_jets
-    - W_jfake
-    - DY_2Mu
     - DY_2Tau
 
 signals:

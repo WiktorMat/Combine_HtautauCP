@@ -1,0 +1,41 @@
+input_folder: "cpdatacards/wham_phi_cp"
+output_folder: "outputs/wham_phi_cp"
+channels: ["mt"]
+merge_mode: 0
+input_file_pattern: "added_histo_{channel}-mergeXbins.root"
+
+systematics: false
+auto_mc_stats: false
+
+categories:
+  mt:
+    - [3, mt_higgs_murho_mTLt65]
+    - [4, mt_higgs_mupi_mTLt65]
+    - [5, mt_higgs_mua1_mTLt65]
+    - [6, mt_higgs_mua11pr_mTLt65]
+
+backgrounds:
+  mt:
+    - QCD
+    - dibosons
+    - tt
+    - W_jets
+    - W_jfake
+    - DY_2Mu
+    - DY_2Tau
+
+signals:
+  ggH:
+    - ggH_sm_prod_sm_htt
+    - ggH_ps_prod_sm_htt
+
+t2w_physics_options:
+  - linear_alpha
+  - fix_signal_strengths
+
+alpha_scan:
+  set_parameters: {alpha: 0}
+  range: [0, 1]
+  points: 21
+  name: ".alpha"
+  plot: {x_min: 0, x_max: 1, y_max: 8}

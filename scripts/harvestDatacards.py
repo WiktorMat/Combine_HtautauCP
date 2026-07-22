@@ -14,13 +14,20 @@ with open(args.config, 'r') as file:
    setup = yaml.safe_load(file)
 
 chans = setup['channels']
-if chans == 'all': chans = ['tt','mt','et']
-else: chans = chans.split(',')
+if chans == 'all':
+    chans = ['tt','mt','et']
+elif isinstance(chans, list):
+    chans = chans
+else:
+    chans = chans.split(',')
 
 
 output_folder = setup['output_folder']
 input_folder = setup['input_folder']
 merge_mode = setup['merge_mode'] # use this option to specify if we want to flatten and/or symmetrise distributions
+add_systematics = setup.get('systematics', True)
+auto_mc_stats = setup.get('auto_mc_stats', True)
+input_file_pattern = setup.get('input_file_pattern', 'added_histo_{channel}-mergeXbins.root')
 # 0: no merging, 1: merge symmetrised bins, 2: Run-2 style merging
 # TODO: implement this in this script based on the extracted shapes rather than using the additional pre-processing step as we did for Run-2
 
@@ -100,6 +107,30 @@ else:
             (6, 'et_higgs_ea11pr_mTLt65'),
             ]
 
+backgrounds_cfg = setup.get('backgrounds')
+
+def background_procs(channel):
+    if backgrounds_cfg is None:
+        return bkg_procs_tt if channel == 'tt' else bkg_procs_lt
+    if isinstance(backgrounds_cfg, dict):
+        fallback = bkg_procs_tt if channel == 'tt' else bkg_procs_lt
+        return backgrounds_cfg.get(channel, backgrounds_cfg.get('lt', fallback))
+    return backgrounds_cfg
+
+if 'signals' in setup:
+    sig_procs = setup['signals']
+
+if 'categories' in setup:
+    cats = {chn: [tuple(cat) for cat in channel_cats]
+            for chn, channel_cats in setup['categories'].items()}
+
+mc_procs = []
+for chn in chans:
+    mc_procs += [p for p in background_procs(chn) if p not in fake_procs]
+mc_procs = list(dict.fromkeys(mc_procs))
+for p in sig_procs.values():
+    mc_procs += p
+
 # Create an empty CombineHarvester instance
 cb = ch.CombineHarvester()
 
@@ -107,15 +138,13 @@ cb = ch.CombineHarvester()
 for chn in chans:
     # Adding Data,Signal Processes and Background processes to the harvester instance
     cb.AddObservations(['*'], ['htt'], ['13p6TeV'], [chn], cats[chn])
-    if chn == 'tt':
-        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs_tt, cats[chn], False)
-    else:
-        cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], bkg_procs_lt, cats[chn], False)
-    cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['ggH'], cats[chn], True)
-    cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], sig_procs['qqH'], cats[chn], True)
+    cb.AddProcesses(['*'], ['htt'], ['13p6TeV'], [chn], background_procs(chn), cats[chn], False)
+    for sig_group, procs in sig_procs.items():
+        cb.AddProcesses(['125'], ['htt'], ['13p6TeV'], [chn], procs, cats[chn], True)
 
 # Systematics are added here
-cb = AddSMRun3Systematics(cb)
+if add_systematics:
+    cb = AddSMRun3Systematics(cb)
 
 if merge_mode == 2 or merge_mode == 3:
     flat_cats = ['tt_higgs_rhorho', 'tt_higgs_rhoa11pr', 'tt_higgs_rhoa1', 'tt_higgs_pirho', 'tt_higgs_pia11pr', 'tt_higgs_a11pra1',
@@ -150,7 +179,7 @@ for chn in chans:
     if Run2: filename = '%s/htt_%s.inputs-sm-13TeV.root' % (input_folder,chn)
     # elif chn == 'tt': filename = '%s/added_histo-mergeXbins.root' % (input_folder)
     #elif chn == 'mt': filename = '%s/mt_2022_2023_merged-mergeXbins.root' % (input_folder)
-    else: filename = '%s/added_histo_%s-mergeXbins.root' % (input_folder, chn)
+    else: filename = '%s/%s' % (input_folder, input_file_pattern.format(channel=chn))
     print (">>>   file %s" % (filename))
     cb.cp().channel([chn]).backgrounds().process([]).era(['13p6TeV']).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC") # add data shapes
     if merge_mode == 0: 
@@ -178,11 +207,14 @@ for chn in chans:
 
 # for QCD scale uncertainties we need to scale the yields to factor out any differences in XS
 #TODO: will need updating onces datacards templates are renamed
-for proc in ['ggH','qqH']:
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_ren_signal",f"QCDscale_ren_{proc}_ACCEPT")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_fac_signal",f"QCDscale_fac_{proc}_ACCEPT")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_isr_signal",f"ps_isr_{proc}")
-    cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_fsr_signal",f"ps_fsr_{proc}")
+if add_systematics:
+    for proc in ['ggH','qqH']:
+        if proc not in sig_procs:
+            continue
+        cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_ren_signal",f"QCDscale_ren_{proc}_ACCEPT")
+        cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"QCDscale_fac_signal",f"QCDscale_fac_{proc}_ACCEPT")
+        cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_isr_signal",f"ps_isr_{proc}")
+        cb.cp().process(sig_procs[proc]).RenameSystematic(cb,"ps_fsr_signal",f"ps_fsr_{proc}")
 
 cb.cp().syst_name(["QCDscale_ren_ggH_ACCEPT"]).ForEachSyst(lambda syst: (
       syst.set_value_u(syst.value_u() * 1/0.7605580771666764),
@@ -246,7 +278,9 @@ def MatchingProcess(first, second):
         first.mass()     == second.mass()
     )
 
-if merge_mode == 0:
+if not auto_mc_stats:
+    print(">>> Skipping autoMCStats")
+elif merge_mode == 0:
     # If not flattening/symmetrising then add bbb uncerts using autoMC stats
     cb.SetAutoMCStats(cb, 0., 1, 1)
 else:

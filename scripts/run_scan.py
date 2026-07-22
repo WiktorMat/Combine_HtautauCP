@@ -5,20 +5,10 @@ import yaml
 import argparse
 import subprocess
 
-### USAGE EXAMPLE
-# ```
-# python3 scripts/run_scan.py 
-# ```
-
-cfg = 'configs/harvestDatacards.yml'
-
-with open(cfg, 'r') as file:
-   setup = yaml.safe_load(file)
-
-folder = setup['output_folder']
-
 def get_args():
     parser = argparse.ArgumentParser(description="Run combine workflow for CP analysis")
+    parser.add_argument('-c', '--config', default='configs/harvestDatacards.yml',
+                        help='harvestDatacards YAML config')
     return parser.parse_args()
 
 def run_command(command):
@@ -37,21 +27,40 @@ def run_command(command):
         print("\n")
         raise
 
-def run_scan(): #vsjet, name):
+def _parameter_string(params):
+    return ','.join(f'{k}={v}' for k, v in params.items())
+
+
+def run_scan(cfg):
+    with open(cfg, 'r') as file:
+       setup = yaml.safe_load(file)
+
+    folder = setup['output_folder']
+    t2w_options = ' '.join(f'--PO {opt}' for opt in setup.get('t2w_physics_options', []))
+    scan = setup.get('alpha_scan', {})
+    alpha_range = scan.get('range', [-90, 90])
+    points = scan.get('points', 21)
+    params = scan.get('set_parameters', {'muV': 1, 'alpha': 0, 'muggH': 1, 'mutautau': 1})
+    name = scan.get('name', '.alpha')
+    plot = scan.get('plot', {})
+    plot_x_min = plot.get('x_min', alpha_range[0])
+    plot_x_max = plot.get('x_max', alpha_range[1])
+    plot_y_max = plot.get('y_max', 8)
+
     # HARVEST DATACARDS
-    run_command(f"python3 scripts/harvestDatacards.py") 
+    run_command(f"python3 scripts/harvestDatacards.py -c {cfg}")
     # CREATE COMBINE WORKSPACE
-    run_command(f"combineTool.py -m 125 -M T2W -P CombineHarvester.Combine_HtautauCP.CPMixtureDecays:CPMixtureDecays -i {folder}/cmb -o ws.root --parallel 8")
+    run_command(f"combineTool.py -m 125 -M T2W -P CombineHarvester.Combine_HtautauCP.CPMixtureDecays:CPMixtureDecays {t2w_options} -i {folder}/cmb -o ws.root --parallel 8")
     # RUN MAX LIKELIHOOD FIT
-    run_command(f"combineTool.py -m 125 -M MultiDimFit --setParameters muV=1,alpha=0,muggH=1,mutautau=1 --setParameterRanges alpha=-90,90 --points 21 --redefineSignalPOIs alpha  -d {folder}/cmb/ws.root --algo grid -t -1 --there -n .alpha --alignEdges 1")
+    run_command(f"combineTool.py -m 125 -M MultiDimFit --setParameters {_parameter_string(params)} --setParameterRanges alpha={alpha_range[0]},{alpha_range[1]} --points {points} --redefineSignalPOIs alpha  -d {folder}/cmb/ws.root --algo grid -t -1 --there -n {name} --alignEdges 1")
     # PLOT 1D SCAN OF ALPHA
-    run_command(f"python3 scripts/plot1DScan.py --main={folder}/cmb/higgsCombine.alpha.MultiDimFit.mH125.root --POI=alpha --output={folder}/alpha_cmb --no-numbers --no-box --x-min=-90 --x-max=90 --y-max=8")
+    run_command(f"python3 scripts/plot1DScan.py --main={folder}/cmb/higgsCombine{name}.MultiDimFit.mH125.root --POI=alpha --output={folder}/alpha_cmb --no-numbers --no-box --x-min={plot_x_min} --x-max={plot_x_max} --y-max={plot_y_max}")
 
 
 def main():
-    # args = get_args()
+    args = get_args()
     try:
-        run_scan() #args.vsjet, args.name)
+        run_scan(args.config)
     except subprocess.CalledProcessError:
         raise RuntimeError("Production failed!")
 

@@ -7,6 +7,8 @@ class CPMixtureDecays(PhysicsModel):
         PhysicsModel.__init__(self)
         self.do_kappas = False
         self.float_mutautau = False
+        self.linear_alpha = False
+        self.fix_signal_strengths = False
 
     def setPhysicsOptions(self, physOptions):
         for po in physOptions:
@@ -14,6 +16,10 @@ class CPMixtureDecays(PhysicsModel):
                 self.do_kappas = True
             if po.startswith("float_mutautau"):
                 self.float_mutautau = True
+            if po.startswith("linear_alpha"):
+                self.linear_alpha = True
+            if po.startswith("fix_signal_strengths"):
+                self.fix_signal_strengths = True
 
     def doParametersOfInterest(self):
         """Create POI and other parameters, and define the POI set."""
@@ -26,7 +32,10 @@ class CPMixtureDecays(PhysicsModel):
         }
  
         if not self.do_kappas: # standard alpha fit
-          self.modelBuilder.doVar('alpha[0,-90,90]')
+          if self.linear_alpha:
+            self.modelBuilder.doVar('alpha[0,0,1]')
+          else:
+            self.modelBuilder.doVar('alpha[0,-90,90]')
           poiNames.append('alpha')
           if self.float_mutautau: # float mutautau instead of muV and muggH (ie for 2D scans)
             self.modelBuilder.doVar('mutautau[1,0,2]')
@@ -34,17 +43,26 @@ class CPMixtureDecays(PhysicsModel):
             self.modelBuilder.doVar('muggH[1]')
           else:
             self.modelBuilder.doVar('mutautau[1]')
-            self.modelBuilder.doVar('muV[1,-5,10]')
-            self.modelBuilder.doVar('muggH[1,-5,10]')
+            if self.fix_signal_strengths or self.linear_alpha:
+              self.modelBuilder.doVar('muV[1]')
+              self.modelBuilder.doVar('muggH[1]')
+            else:
+              self.modelBuilder.doVar('muV[1,-5,10]')
+              self.modelBuilder.doVar('muggH[1,-5,10]')
 
           self.modelBuilder.doSet('POI', ','.join(poiNames))
 
-          self.modelBuilder.factory_('expr::a1("sqrt(@0)*cos(@1/90*{pi}/2)", mutautau, alpha)'.format(**params))
-          self.modelBuilder.factory_('expr::a3("sqrt(@0)*sin(@1/90*{pi}/2)", mutautau, alpha)'.format(**params))
+          if self.linear_alpha:
+            self.modelBuilder.factory_('expr::sm_scaling("1-@0", alpha)')
+            self.modelBuilder.factory_('expr::ps_scaling("@0", alpha)')
+            self.modelBuilder.factory_('expr::mm_scaling("0", alpha)')
+          else:
+            self.modelBuilder.factory_('expr::a1("sqrt(@0)*cos(@1/90*{pi}/2)", mutautau, alpha)'.format(**params))
+            self.modelBuilder.factory_('expr::a3("sqrt(@0)*sin(@1/90*{pi}/2)", mutautau, alpha)'.format(**params))
 
-          self.modelBuilder.factory_('expr::sm_scaling("@0*@0 - @0*@1", a1, a3)')
-          self.modelBuilder.factory_('expr::ps_scaling("@1*@1 - @0*@1", a1, a3)')
-          self.modelBuilder.factory_('expr::mm_scaling("2*@0*@1", a1, a3)')
+            self.modelBuilder.factory_('expr::sm_scaling("@0*@0 - @0*@1", a1, a3)')
+            self.modelBuilder.factory_('expr::ps_scaling("@1*@1 - @0*@1", a1, a3)')
+            self.modelBuilder.factory_('expr::mm_scaling("2*@0*@1", a1, a3)')
 
         else:  # 2 D Kappa scans
           self.modelBuilder.doVar('kappaH[1,-2,2]')

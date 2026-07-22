@@ -1,6 +1,6 @@
 input_folder: "cpdatacards/wham_phi_cp"
 output_folder: "outputs/wham_phi_cp"
-channels: ["mt"]
+channels: ["tt"]
 merge_mode: 0
 input_file_pattern: "added_histo_{channel}-mergeXbins.root"
 
@@ -8,14 +8,19 @@ systematics: false
 auto_mc_stats: false
 
 categories:
-  mt:
-    - [3, mt_higgs_murho_mTLt65]
-    - [4, mt_higgs_mupi_mTLt65]
-    - [5, mt_higgs_mua1_mTLt65]
-    - [6, mt_higgs_mua11pr_mTLt65]
+  tt:
+    - [3, tt_higgs_rhorho]
+    - [7, tt_higgs_pirho]
+    - [8, tt_higgs_pipi]
+    - [9, tt_higgs_pia1]
+    - [12, tt_higgs_rhopi]
+    - [13, tt_higgs_rhoa1]
+    - [14, tt_higgs_a1pi]
+    - [15, tt_higgs_a1rho]
+    - [16, tt_higgs_a1a1]
 
 backgrounds:
-  mt:
+  tt:
     - DY_2Tau
 
 signals:

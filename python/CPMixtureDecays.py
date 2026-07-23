@@ -8,6 +8,7 @@ class CPMixtureDecays(PhysicsModel):
         self.do_kappas = False
         self.float_mutautau = False
         self.linear_alpha = False
+        self.linear_alpha_degrees = False
         self.fix_signal_strengths = False
 
     def setPhysicsOptions(self, physOptions):
@@ -18,6 +19,9 @@ class CPMixtureDecays(PhysicsModel):
                 self.float_mutautau = True
             if po.startswith("linear_alpha"):
                 self.linear_alpha = True
+            if po.startswith("linear_alpha_degrees"):
+                self.linear_alpha = True
+                self.linear_alpha_degrees = True
             if po.startswith("fix_signal_strengths"):
                 self.fix_signal_strengths = True
 
@@ -32,7 +36,9 @@ class CPMixtureDecays(PhysicsModel):
         }
  
         if not self.do_kappas: # standard alpha fit
-          if self.linear_alpha:
+          if self.linear_alpha_degrees:
+            self.modelBuilder.doVar('alpha[0,-90,90]')
+          elif self.linear_alpha:
             self.modelBuilder.doVar('alpha[0,0,1]')
           else:
             self.modelBuilder.doVar('alpha[0,-90,90]')
@@ -52,7 +58,11 @@ class CPMixtureDecays(PhysicsModel):
 
           self.modelBuilder.doSet('POI', ','.join(poiNames))
 
-          if self.linear_alpha:
+          if self.linear_alpha_degrees:
+            self.modelBuilder.factory_('expr::sm_scaling("1-abs(@0)/90", alpha)')
+            self.modelBuilder.factory_('expr::ps_scaling("abs(@0)/90", alpha)')
+            self.modelBuilder.factory_('expr::mm_scaling("0", alpha)')
+          elif self.linear_alpha:
             self.modelBuilder.factory_('expr::sm_scaling("1-@0", alpha)')
             self.modelBuilder.factory_('expr::ps_scaling("@0", alpha)')
             self.modelBuilder.factory_('expr::mm_scaling("0", alpha)')

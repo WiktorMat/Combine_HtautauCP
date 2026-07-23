@@ -5,7 +5,7 @@ merge_mode: 0
 input_file_pattern: "added_histo_{channel}-mergeXbins.root"
 
 systematics: false
-auto_mc_stats: false
+auto_mc_stats: true
 
 categories:
   tt:

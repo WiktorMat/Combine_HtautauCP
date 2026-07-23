@@ -197,6 +197,7 @@ parser.add_argument('--meta', default='', help='Other metadata to save in format
 parser.add_argument('--logo', default='CMS')
 parser.add_argument('--logo_sub', default='Work in progress')
 parser.add_argument('--x_title', default='#alpha^{H#tau#tau} (#circ)')
+parser.add_argument('--ch-label', default=None, help='override channel label')
 parser.add_argument('--no_title', action='store_true', help='do not draw the luminosity title')
 parser.add_argument('--combination', action='store_true', help='run2 run3 combination')
 args = parser.parse_args()
@@ -302,7 +303,9 @@ main_scan['func'].SetLineColor(ROOT.TColor.GetColor("#000099"))
 #main_scan['func'].Draw('same') # uncomment to draw spline
 main_scan['graph'].Draw('PSAME')
 
-if 'cmb' in args.output:
+if args.ch_label is not None:
+    ch_label = args.ch_label
+elif 'cmb' in args.output:
     ch_label = '#tau_{h}#tau_{h}/#mu#tau_{h}/e#tau_{h}'
 elif 'tt' in args.output:
     ch_label = '#tau_{h}#tau_{h}'
@@ -572,5 +575,4 @@ if args.meta != '':
         json.dump(meta, outmeta, sort_keys=True, indent=4, separators=(',', ': '))
 
 # canv.Print('.C')
-
 

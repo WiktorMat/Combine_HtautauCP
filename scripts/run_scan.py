@@ -46,6 +46,8 @@ def run_scan(cfg):
     plot_x_min = plot.get('x_min', alpha_range[0])
     plot_x_max = plot.get('x_max', alpha_range[1])
     plot_y_max = plot.get('y_max', 8)
+    plot_ch_label = plot.get('channel_label')
+    plot_label_arg = f" --ch-label='{plot_ch_label}'" if plot_ch_label else ""
 
     # HARVEST DATACARDS
     run_command(f"python3 scripts/harvestDatacards.py -c {cfg}")
@@ -54,7 +56,7 @@ def run_scan(cfg):
     # RUN MAX LIKELIHOOD FIT
     run_command(f"combineTool.py -m 125 -M MultiDimFit --setParameters {_parameter_string(params)} --setParameterRanges alpha={alpha_range[0]},{alpha_range[1]} --points {points} --redefineSignalPOIs alpha  -d {folder}/cmb/ws.root --algo grid -t -1 --there -n {name} --alignEdges 1")
     # PLOT 1D SCAN OF ALPHA
-    run_command(f"python3 scripts/plot1DScan.py --main={folder}/cmb/higgsCombine{name}.MultiDimFit.mH125.root --POI=alpha --output={folder}/alpha_cmb --no-numbers --no-box --x-min={plot_x_min} --x-max={plot_x_max} --y-max={plot_y_max}")
+    run_command(f"python3 scripts/plot1DScan.py --main={folder}/cmb/higgsCombine{name}.MultiDimFit.mH125.root --POI=alpha --output={folder}/alpha_cmb --no-numbers --no-box --x-min={plot_x_min} --x-max={plot_x_max} --y-max={plot_y_max}{plot_label_arg}")
 
 
 def main():
